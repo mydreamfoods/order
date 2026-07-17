@@ -583,41 +583,83 @@ function round2(n) {
 // productSizeMap:    { 'Product Name': size }
 let productsBySegment = {};
 let productSizeMap    = {};
+let allProducts        = []; // raw list from server, unfiltered by market
 
 async function fetchProducts() {
   const sub = document.getElementById('greetingSubtitle');
   try {
     const resp = await fetch(WEB_APP_URL + '?action=getProducts');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error);
+    const raw = await resp.json();
+    if (raw.error) throw new Error(raw.error);
+    if (raw.success === false) throw new Error(raw.error || 'Failed to load products');
+    const data = Array.isArray(raw) ? raw : (raw.products || []);
 
-    // data = [{segment, product, size}, ...]
-    productsBySegment = {};
-    productSizeMap    = {};
-    data.forEach(row => {
-      const seg  = (row.segment || '').trim();
-      const prod = (row.product || '').trim();
-      const size = Number(row.size) || 1;
-      if (!seg || !prod) return;
-      if (!productsBySegment[seg]) productsBySegment[seg] = [];
-      productsBySegment[seg].push(prod);
-      productSizeMap[prod] = size;
-    });
-
-    // Rebuild segment dropdown
-    const segEl = document.getElementById('cmbSegment');
-    segEl.innerHTML = '<option value="">Select Segment</option>';
-    Object.keys(productsBySegment).sort().forEach(s => {
-      const o = document.createElement('option');
-      o.value = s; o.textContent = s; segEl.appendChild(o);
-    });
+    // data = [{segment, product, size, market}, ...]
+    allProducts = data;
+    rebuildProductIndex();
 
     sub.textContent = 'Fill in party details, then add items below';
     showToast('✅ Products loaded', 'success');
   } catch (err) {
     sub.textContent = '⚠️ Could not load products from sheet';
     showToast('⚠️ Product load failed: ' + err.message, 'error');
+  }
+}
+function rebuildProductIndex() {
+  console.log('[rebuildProductIndex] allProducts count:', allProducts.length);
+  console.log('[rebuildProductIndex] sample rows:', allProducts.slice(0, 3));
+  const marketValues = [...new Set(allProducts.map(r => JSON.stringify(r.market)))];
+  console.log('[rebuildProductIndex] distinct market values seen:', marketValues);
+
+  // Check if ANY product has a market field set
+  const hasMarketData = allProducts.some(row => (row.market || '').trim() !== '');
+
+  // Customer view: Local-market products only (if market data exists). Office view: everything.
+  // If NO product has market data at all, show all products in both modes (graceful fallback).
+  const filtered = (customerMode && hasMarketData)
+    ? allProducts.filter(row => (row.market || '').trim().toLowerCase().includes('local'))
+    : allProducts;
+
+  if (customerMode && hasMarketData && allProducts.length > 0 && filtered.length === 0) {
+    showToast('⚠️ No products have Market = Local — check the Products sheet', 'error');
+    console.warn('[rebuildProductIndex] 0 products matched "local" out of', allProducts.length);
+  }
+
+  productsBySegment = {};
+  productSizeMap    = {};
+  filtered.forEach(row => {
+    const seg  = (row.segment || '').trim();
+    const prod = (row.product || '').trim();
+    const size = Number(row.size) || 1;
+    if (!seg || !prod) return;
+    if (!productsBySegment[seg]) productsBySegment[seg] = [];
+    productsBySegment[seg].push(prod);
+    productSizeMap[prod] = size;
+  });
+
+  // Rebuild segment dropdown
+  const segEl = document.getElementById('cmbSegment');
+  const currentSeg = segEl.value;
+  segEl.innerHTML = '<option value="">Select Segment</option>';
+  Object.keys(productsBySegment).sort().forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s; segEl.appendChild(o);
+  });
+
+  // If the currently selected segment/product is no longer available under this mode
+  // (e.g. it was an Export-only product and we just switched to Customer view), clear it.
+  const currentProd = document.getElementById('txtProduct').value.trim();
+  if (currentSeg && !productsBySegment[currentSeg]) {
+    segEl.value = '';
+    document.getElementById('txtProduct').value = '';
+    document.getElementById('productList').innerHTML = '';
+  } else if (currentSeg) {
+    segEl.value = currentSeg;
+    updateProductDatalist(currentSeg);
+    if (currentProd && !(productsBySegment[currentSeg] || []).includes(currentProd)) {
+      document.getElementById('txtProduct').value = '';
+    }
   }
 }
 
@@ -644,6 +686,7 @@ function toggleMode() {
     btn.className = 'mode-btn office';
     btn.textContent = '🔓 Office';
   }
+  rebuildProductIndex();
   updateAll();
 }
 
