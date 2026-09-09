@@ -444,15 +444,16 @@
         </button>
         <!-- Collapsible price section -->
         <div id="priceFields" class="price-sensitive" style="display:none; overflow:hidden;">
-          <div class="field-group" style="margin-top:10px;">
-            <div class="field-label">💰 Rate (₹)</div>
-            <input type="number" id="txtRate" min="0" step="any" placeholder="0.00" inputmode="decimal" oninput="calcAmount()">
-          </div>
-          <div class="field-row">
-            <div class="field-group">
-              <div class="field-label">🏷️ Discount</div>
-              <div class="disc-row">
-                <select id="cmbDiscType" onchange="onDiscTypeChange()">
+          <!-- Row 1: Rate | Disc | Amount — big and equal -->
+          <div class="field-row" style="margin-top:10px; gap:10px; align-items:flex-end;">
+            <div class="field-group" style="flex:1;">
+              <div class="field-label">💰 Rate ₹</div>
+              <input type="number" id="txtRate" min="0" step="any" placeholder="0.00" inputmode="decimal" oninput="calcAmount()" style="font-size:18px; font-weight:700; padding:13px 14px;">
+            </div>
+            <div class="field-group" style="flex:1;">
+              <div class="field-label">🏷️ Disc</div>
+              <div class="disc-row" style="gap:6px;">
+                <select id="cmbDiscType" onchange="onDiscTypeChange()" style="flex:0 0 68px; font-size:15px; font-weight:700; padding:13px 8px;">
                   <option value="%">%</option>
                   <option value="₹">₹</option>
                   <option value="+1">+1</option>
@@ -460,18 +461,23 @@
                   <option value="+3">+3</option>
                   <option value="+4">+4</option>
                   <option value="+5">+5</option>
+                  <option value="+6">+6</option>
+                  <option value="+7">+7</option>
+                  <option value="+8">+8</option>
+                  <option value="+9">+9</option>
                 </select>
-                <input type="number" id="txtDiscount" min="0" step="any" placeholder="0" inputmode="decimal" oninput="calcAmount()">
+                <input type="number" id="txtDiscount" min="0" step="any" placeholder="0" inputmode="decimal" oninput="calcAmount()" style="font-size:18px; font-weight:700; padding:13px 10px;">
               </div>
             </div>
-            <div class="field-group">
+            <div class="field-group" style="flex:1;">
               <div class="field-label">🧾 Amount</div>
-              <input type="text" id="txtAmount" readonly placeholder="₹0.00">
+              <input type="text" id="txtAmount" readonly placeholder="₹0.00" style="font-size:20px; font-weight:800; padding:13px 14px; color:var(--accent); letter-spacing:0.01em;">
             </div>
           </div>
-          <div class="field-group" style="margin-top:10px;">
+          <!-- Row 2: Remarks full width -->
+          <div class="field-group" style="margin-top:8px;">
             <div class="field-label">💬 Remarks</div>
-            <input type="text" id="txtItemRemarks" placeholder="Optional note">
+            <input type="text" id="txtItemRemarks" placeholder="Note">
           </div>
         </div>
         <div class="action-row" style="margin-top:12px;">
@@ -620,19 +626,8 @@ function rebuildProductIndex() {
   const marketValues = [...new Set(allProducts.map(r => JSON.stringify(r.market)))];
   console.log('[rebuildProductIndex] distinct market values seen:', marketValues);
 
-  // Check if ANY product has a market field set
-  const hasMarketData = allProducts.some(row => (row.market || '').trim() !== '');
-
-  // Customer view: Local-market products only (if market data exists). Office view: everything.
-  // If NO product has market data at all, show all products in both modes (graceful fallback).
-  const filtered = (customerMode && hasMarketData)
-    ? allProducts.filter(row => (row.market || '').trim().toLowerCase().includes('local'))
-    : allProducts;
-
-  if (customerMode && hasMarketData && allProducts.length > 0 && filtered.length === 0) {
-    showToast('⚠️ No products have Market = Local — check the Products sheet', 'error');
-    console.warn('[rebuildProductIndex] 0 products matched "local" out of', allProducts.length);
-  }
+  // Always show all products — no market filtering
+  const filtered = allProducts;
 
   productsBySegment = {};
   productSizeMap    = {};
@@ -736,7 +731,13 @@ function syncDiscUI() {
 }
 function onDiscTypeChange() {
   const dt = document.getElementById('cmbDiscType').value;
-  if (dt.startsWith('+')) document.getElementById('txtDiscount').value = dt.slice(1);
+  const discInput = document.getElementById('txtDiscount');
+  if (dt.startsWith('+')) {
+    discInput.value = '';
+    discInput.style.display = 'none';   // hide number input for +N types
+  } else {
+    discInput.style.display = '';       // show for % and ₹
+  }
   syncDiscUI();
   calcAmount();
 }
@@ -826,11 +827,15 @@ function getFormItem() {
   const size = parseInt(document.getElementById('txtSize').value) || 0;
   const discType = document.getElementById('cmbDiscType').value;
   const remarks = document.getElementById('txtItemRemarks').value.trim();
+  // Only % discount is saved to Discount column. ₹ and +N types → blank
+  const discForSheet = discType === '%' ? disc : 0;
   return {
     seg:      document.getElementById('cmbSegment').value.trim(),
     prod:     document.getElementById('txtProduct').value.trim(),
     unit:     document.getElementById('cmbUnit').value.trim(),
-    qty, rate, size, discType, disc, remarks,
+    qty, rate, size, discType,
+    disc:     discForSheet,
+    remarks,
     amount:   computeAmount(rate, qty, size, discType, disc)
   };
 }
@@ -889,7 +894,9 @@ function editItem(index) {
     document.getElementById('txtQty').value      = item.qty;
     document.getElementById('txtRate').value     = item.rate;
     document.getElementById('cmbDiscType').value = item.discType;
-    document.getElementById('txtDiscount').value = item.disc || '';
+    const _isPlus = (item.discType || '').startsWith('+');
+    document.getElementById('txtDiscount').style.display = _isPlus ? 'none' : '';
+    document.getElementById('txtDiscount').value = _isPlus ? '' : (item.disc || '');
     document.getElementById('txtItemRemarks').value = item.remarks || '';
     syncDiscUI();
     calcAmount();
@@ -908,6 +915,7 @@ function clearItemFields() {
   document.getElementById('cmbUnit').value = '';
   document.getElementById('cmbDiscType').value = '%';
   document.getElementById('txtDiscount').disabled = false;
+  document.getElementById('txtDiscount').style.display = '';
   document.getElementById('productList').innerHTML = '';
   togglePriceFields(false);
 }
