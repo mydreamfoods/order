@@ -395,48 +395,59 @@
       </div>
       <p class="section-label">Order Details</p>
       <div class="field-card">
-        <div class="field-row">
-          <div class="field-group">
+        <div class="field-row" style="gap:10px;">
+          <div class="field-group" style="flex:0 0 140px;">
             <div class="field-label">📅 Date</div>
             <input type="date" id="txtDate">
           </div>
-        </div>
-        <div class="field-group" style="margin-top:10px;">
-          <div class="field-label">👥 Party Name with City</div>
-          <input type="text" id="txtParty" placeholder="e.g. Ramesh Traders, Indore">
+          <div class="field-group" style="flex:1;">
+            <div class="field-label">👥 Party Name with City</div>
+            <input type="text" id="txtParty" placeholder="e.g. Ramesh Traders, Indore">
+          </div>
         </div>
       </div>
       <div class="section-gap"></div>
       <p class="section-label">Add Item</p>
       <div class="field-card">
+        <!-- Company -->
         <div class="field-group">
-          <div class="field-label">📂 Segment</div>
-          <select id="cmbSegment">
+          <div class="field-label">🏢 Company</div>
+          <select id="cmbCompany" onchange="onCompanyChange()">
             <option value="">Loading…</option>
           </select>
         </div>
-        <div class="field-group">
-          <div class="field-label">📦 Product</div>
-          <input type="text" id="txtProduct" list="productList" placeholder="Type to filter or select…" autocomplete="off">
-          <datalist id="productList"></datalist>
+        <!-- Segment + Product + Qty in one row -->
+        <div class="field-row" style="gap:8px; align-items:stretch; flex-wrap:nowrap;">
+          <div class="field-group" style="flex:0 0 114px;">
+            <div class="field-label">📂 Segment</div>
+            <select id="cmbSegment">
+              <option value="">Segment</option>
+            </select>
+          </div>
+          <div class="field-group" style="flex:7; min-width:0;">
+            <div class="field-label">📦 Product</div>
+            <input type="text" id="txtProduct" list="productList" placeholder="Select…" autocomplete="off" style="font-size:13px; height:46px;">
+            <datalist id="productList"></datalist>
+          </div>
+          <div class="field-group" style="flex:2; min-width:0;">
+            <div class="field-label">🔢 Qty</div>
+            <input type="number" id="txtQty" min="1" placeholder="1" inputmode="numeric" oninput="calcAmount()" style="font-size:18px; font-weight:700; text-align:center; height:46px;">
+          </div>
         </div>
+        <!-- Hidden Unit + Size (auto-filled) -->
         <div class="field-row" style="display:none;">
           <div class="field-group" style="flex:1;">
             <div class="field-label">📏 Unit</div>
-          <select id="cmbUnit">
-            <option value="">Select Unit</option>
-            <option>PCS</option><option>BOX</option><option>CONTAINER</option>
-            <option>JAR</option><option>PKT</option><option>CUP</option><option>BUCKET</option>
-          </select>
+            <select id="cmbUnit">
+              <option value="">Select Unit</option>
+              <option>PCS</option><option>BOX</option><option>CONTAINER</option>
+              <option>JAR</option><option>PKT</option><option>CUP</option><option>BUCKET</option>
+            </select>
           </div>
           <div class="field-group" style="flex:0 0 90px;">
             <div class="field-label">📐 Size</div>
             <input type="text" id="txtSize" readonly placeholder="—">
           </div>
-        </div>
-        <div class="field-group">
-          <div class="field-label">🔢 Qty</div>
-          <input type="number" id="txtQty" min="1" placeholder="1" inputmode="numeric" oninput="calcAmount()">
         </div>
         <!-- Toggle for price fields -->
         <button class="price-toggle price-sensitive" id="priceToggleBtn" onclick="togglePriceFields()" type="button">
@@ -595,9 +606,13 @@ function round2(n) {
 // ── Product Data (fetched from Products sheet) ────────────────────────────────
 // productsBySegment: { Segment: ['Product Name', ...] }
 // productSizeMap:    { 'Product Name': size }
+// companiesList:     ['Company A', ...]
+// companySegments:   { 'Company A': ['Seg1', 'Seg2'] }
 let productsBySegment = {};
 let productSizeMap    = {};
-let allProducts        = []; // raw list from server, unfiltered by market
+let allProducts        = [];
+let companiesList      = [];
+let companySegments    = {};  // company → segments available
 
 async function fetchProducts() {
   const sub = document.getElementById('greetingSubtitle');
@@ -631,39 +646,74 @@ function rebuildProductIndex() {
 
   productsBySegment = {};
   productSizeMap    = {};
+  companySegments   = {};
+  companiesList     = [];
+
   filtered.forEach(row => {
-    const seg  = (row.segment || '').trim();
-    const prod = (row.product || '').trim();
-    const size = Number(row.size) || 1;
+    const seg     = (row.segment  || '').trim();
+    const prod    = (row.product  || '').trim();
+    const size    = Number(row.size) || 1;
+    const company = (row.company  || '').trim();
     if (!seg || !prod) return;
+
+    // products by segment
     if (!productsBySegment[seg]) productsBySegment[seg] = [];
     productsBySegment[seg].push(prod);
     productSizeMap[prod] = size;
+
+    // company → segments map
+    if (company) {
+      if (!companySegments[company]) companySegments[company] = new Set();
+      companySegments[company].add(seg);
+    }
   });
 
-  // Rebuild segment dropdown
+  // Build sorted company list
+  companiesList = Object.keys(companySegments).sort();
+
+  // Populate Company dropdown
+  const coEl = document.getElementById('cmbCompany');
+  const currentCo = coEl.value;
+  coEl.innerHTML = '<option value="">All Companies</option>';
+  companiesList.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c; coEl.appendChild(o);
+  });
+  if (currentCo && companySegments[currentCo]) coEl.value = currentCo;
+
+  // Populate Segment dropdown filtered by company
+  _populateSegmentByCompany(coEl.value);
+}
+
+function _populateSegmentByCompany(company) {
   const segEl = document.getElementById('cmbSegment');
   const currentSeg = segEl.value;
-  segEl.innerHTML = '<option value="">Select Segment</option>';
-  Object.keys(productsBySegment).sort().forEach(s => {
+  segEl.innerHTML = '<option value="">Segment</option>';
+
+  const segs = company && companySegments[company]
+    ? [...companySegments[company]].sort()
+    : Object.keys(productsBySegment).sort();
+
+  segs.forEach(s => {
     const o = document.createElement('option');
     o.value = s; o.textContent = s; segEl.appendChild(o);
   });
 
-  // If the currently selected segment/product is no longer available under this mode
-  // (e.g. it was an Export-only product and we just switched to Customer view), clear it.
-  const currentProd = document.getElementById('txtProduct').value.trim();
-  if (currentSeg && !productsBySegment[currentSeg]) {
+  // Restore selection if still valid
+  if (currentSeg && segs.includes(currentSeg)) {
+    segEl.value = currentSeg;
+    updateProductDatalist(currentSeg);
+  } else {
     segEl.value = '';
     document.getElementById('txtProduct').value = '';
     document.getElementById('productList').innerHTML = '';
-  } else if (currentSeg) {
-    segEl.value = currentSeg;
-    updateProductDatalist(currentSeg);
-    if (currentProd && !(productsBySegment[currentSeg] || []).includes(currentProd)) {
-      document.getElementById('txtProduct').value = '';
-    }
   }
+}
+
+function onCompanyChange() {
+  _populateSegmentByCompany(document.getElementById('cmbCompany').value);
+  document.getElementById('txtProduct').value = '';
+  document.getElementById('productList').innerHTML = '';
 }
 
 function getSizeForProduct(prodName) {
