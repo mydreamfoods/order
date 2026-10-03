@@ -958,16 +958,25 @@ function editItem(index) {
   showToast('✏️ Item loaded for editing', 'info');
 }
 function clearItemFields() {
+  // Preserve last selected segment so user doesn't have to re-select after each add
+  const lastSeg = document.getElementById('cmbSegment').value;
+
   ['txtProduct','txtQty','txtRate','txtDiscount','txtAmount','txtSize','txtItemRemarks'].forEach(id =>
     document.getElementById(id).value = ''
   );
-  document.getElementById('cmbSegment').value = '';
   document.getElementById('cmbUnit').value = '';
   document.getElementById('cmbDiscType').value = '%';
   document.getElementById('txtDiscount').disabled = false;
   document.getElementById('txtDiscount').style.display = '';
-  document.getElementById('productList').innerHTML = '';
   togglePriceFields(false);
+
+  // Restore segment and keep its product datalist populated
+  if (lastSeg) {
+    document.getElementById('cmbSegment').value = lastSeg;
+    updateProductDatalist(lastSeg);
+  } else {
+    document.getElementById('productList').innerHTML = '';
+  }
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
