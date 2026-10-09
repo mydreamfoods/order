@@ -1204,6 +1204,7 @@ async function saveOrder() {
     showToast(isEdit ? `✅ Order ${orderNo} updated!` : `✅ Order ${orderNo} saved!`, 'success');
     alert(isEdit ? `🎉 Order ${orderNo} updated successfully!` : `🎉 Order ${orderNo} saved successfully!`);
     clearForm(true);
+    switchTab('Order');
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   } finally {
