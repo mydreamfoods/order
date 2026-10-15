@@ -299,6 +299,21 @@
     text-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
   .summary-sub { font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 700; }
+  /* ── Party combobox ── */
+  .party-combo-wrap { position: relative; }
+  .party-dropdown {
+    display: none; position: fixed; z-index: 9999;
+    background: #fff; border: 1.5px solid #c7d2fe;
+    border-radius: 10px; max-height: 220px; overflow-y: auto;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.15);
+  }
+  .party-dropdown.open { display: block; }
+  .party-option {
+    padding: 10px 14px; cursor: pointer; font-size: 14px;
+    border-bottom: 1px solid #f0f4ff; color: var(--text);
+  }
+  .party-option:last-child { border-bottom: none; }
+  .party-option:hover, .party-option.active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
   /* ── Party chip ── */
   .party-chip {
     display: inline-flex; align-items: center; gap: 6px;
@@ -402,7 +417,10 @@
           </div>
           <div class="field-group" style="flex:1;">
             <div class="field-label">👥 Party Name with City</div>
-            <input type="text" id="txtParty" placeholder="e.g. Ramesh Traders, Indore">
+            <div class="party-combo-wrap">
+              <input type="text" id="txtParty" placeholder="Type to search client..." autocomplete="off">
+              <div id="partyDropdown" class="party-dropdown"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -613,6 +631,88 @@ let productSizeMap    = {};
 let allProducts        = [];
 let companiesList      = [];
 let companySegments    = {};  // company → segments available
+// ── Static client list — instant fallback, always available ──────────────────
+const STATIC_CLIENTS = ["AK TRADERS AURANGABAD","ALFARHAN & SONS STORE, SHAHGANJ","ALI TRADERS SIWAN","AMAN AGENT &TRADERS (Palwal)","AMBER AGENCIES KANPUR","AMIT TRADERS BURHANPUR","ANIL AGENCY SATNA","ASHUTOSH ENTERPRISES MEERUT","Aamantran ( JAMMU )","Aamjn Business Corporation","Abhinandan Traders Jalgaon","Akshay Purohit Nath Dwara","Anil Trading Nanded","Ankur Cold Drinks and Confectionery","Annapurna Distribution House RAJPUR","Ashok Agency AURANGABAD","BAFNA TRADERS BASMAT","BAHETI TRADING CO ISLAMPUR","Balaji Traders KOTA","BanaShankari Traders VIJAYPURA","Bhagat Sales KHAIRTAL","Bhagwan Sweet Stores Ajmer","Brahmakshatriya Sales Banaskantha","CHOCOLATE HOUSE SUJANGARH","Chirag Trading chennai","D MART NIPANIA","DALIM STORES MURSHIDABAD","DAWKII MARKETING PVT LTD AGARTALA","DEEPAK AGENCIES CHITRAKOOT","DEEPAK CONFECTIONERY AGRA","DEV TRADERS UDAIPUR","DEWANI STORE BAREILLY","DEWANI TRADERS BAREILLY","DROWPADI STORES JIBANTALA","DURGA TRADING COMPANY MUZZAFARNAGAR","Deep Agencies Nagpur","Flipkart Internet Private Limited","Funtime Food","GANESH FOOD AND CONFECTIONERY RAIGARH","GAURAV ENTEPRISES JAIPUR","GOPAL ENTERPRISES MODINAGAR","GOPI SWEETS AKOLA","GURUKRIPA CONFECTIONERY NASIK","GURUNANAK CONFECTIONERY Pachora","GYAN TRADERS JHALRAPATAN","Ganesh Enterprises & Events Raigarh","Garg Agencies ROORKEE","Gouri Enterprise Uttar Dinajpur","Gulwani Enterprises","H.R. TRADERS KANTH MORADABAD","HARI OM  CONFECTIONARY BHILWADA","HARI OM SWEETS NEEMUCH","Haldi Ram Ghyasi Ram & Sons  Bharatpur","Hameed Enterprises Belagavi","Hamja Traders Rahuri","Harish Trading Company","Harshit Enterprises Bihar","JAI BABA SALES RAIPUR","JAI MARKETING KHANDWA","JAIN TRADERS BARNALA","JAISWAL TRADERS KISHANGANJ","JAY AMBE TRADERS BHAVNAGAR","JINDAL CONFECTIONERY KAITHAL","JOY SANTOSHI CONFECTIONERY POROLDA","Janta Sweets Jamnagar","Jeetu Trading Company","KAPUR CONFECTIONERS DELHI","KASOUDHAN AGENCY GHAZIPUR","KAUSHAL MARKETING (Guwahati)","KBL ENTERPRISES RAXAUL","KDR Marketing Guwahati","KESHAV STORE GULAB BAG","KISHAN GOLI WALA KOTA","KISHORE AGENCY JABALPUR","KOMAL TRADERS FARRUKHABAD","KRISHNA AGENCY RISHIKESH","KRISHNA ENTERPRISES, DAWA BAZAR INDORE","KUSH KUMAR & COMPANY BARAN","Kailas Stores Malegaon","Kailash Chandra Goyal","Kamla Toffee Supliers MAKRANA","Kavya Traders BASTI","Komal Enterprises Indore","Krishna Marketing ,Bulandshahr","Krishna Traders , Sikar","LACHIT AGENCY JORHAT","LAVESH DHARMANI DEOLI","LAXMI CONFECTIONERY Rae Bareli","LOVE TRADING JHANSI","M.R. Traders Barnala","M/S CHOCOLATE HOUSE JALORE","M/s SATNAM AGENCY KARAULI RAJESTHAN","MAA KALI ENTERPRISES, MEDINIPUR","MADHUR TRADERS ULHASNAGAR","MAHADEV BISCUITS GORAKHPUR","MAMTA ENTERPRISES VARANASI","MANOJ KUMAR AAGRA","MANZOOR And COMPANY (Srinagar)","MEGHDOOT AGENCIES BHOPAL","MOHIT CONFACTARY CHITTORGARH","MUKESH TRADERS PATNA","Mahavir Traders Barnala","Mangla Agency AMBIKAPUR","Meerut Chocolate Company","Mehraj Milk Supply ANANTNAG","Mehraj Milk Supply NAI BASTI","Mohit Confectionery Store Tohana","Mohit Enterprises KUSHALGARH DBTRS","Ms Enterprise SUNDANGARH","NAKODA CHOCOLATE HUBLI","NANAK STORES BHOPAL","NAYYAR TRADING CO. LUDHIYANA","NEW AKASH SWEETS NANDURA","NEW OM SWEETS (AMALNER)","NITU ENTERPRISES","New Prince Stores Dhar","OM GENERAL STORES MORADABAD","OM MARKETING RAJKOT","OM SATYA SAI AGENCIES RAJAHMUNDRY","OM TRADERS , PRATAPGARH","Om Sai Traders Bnada","Om Shri Traders ITARSI","PIPADA TRADERS NIMBHERA","PRAGATI TRADERS, BALAGHAT","PRANAT TRADERS PACHORE","PRITAM ENTERPRICES GWALIOR","PRIYA STORE DHOLPUR","Paresh Traders Surendranagar","Pawan Agritech","Poona Sweet Products Jodhpur","Prakash Kumar Sawaldas Bina","Prakash Traders KHANDWA","Pratap Rai and Sons Private Limited Bareilly","Pratap Rai and Sons Private Limited Lucknow","Pravin Store Junagadh","Premalaya SSILIGURI","Punit Maheshwari Nathdvara","R.M.TRADING CO. KANPUR","RADHIKA ENTERPRISES SUNDARGARH","RAJ SWEETS UJJAIN","RAJA ENTERPRISES Ratlam","RAJAL ENTERPRISE BHUJ KUTCH","RAJDEEP SALES & MARKETING JAGATDAL","RAJESH SANWALDAS KARIRA","REJA STORES MALDA","ROSHAN ENTERPRISES NARAYAN GOAN","ROYAL CONFECTIONERY, SAHARANPUR","RUSHABH TRADING SURENDRANAGAR","Radhika Confectonary Bilaspur","Rajasthan Choclate House MADHURAI","Rajendra Kumar Ashish Kumar Tonk","Ramesh Kumar and Sons AMRITSAR","Ratn Raj Collection & Concessionary MANAWARa","Rayon Systems Banglore","Ritesh Traders RAJGARH DHAR","Rohit Agencies Gondia","Roshantaj Enterprises Hindupur","S.P. TRADERS BAREILLY","S.P. TRADING COMPANY KARNAL","SADIKUL SEKH (MURSHIDABAD)","SAIBABA AGENCY AHMEDABADD","SANJAY TRADERS Khandwa","SANJAY TRAVELS","SANMATI KIRANA STORE PACHORE","SATNAM AGENCY KARAULI","SHAN ENTERPRISES GONDA","SHIVAM TRADERS CHANDAUSI","SHOAIB STORES ' Malda'","SHREE AGENCIES MANDSAUR","SHREE KHATU SHYAM ENTERPRISES ( KAITHAL)","SHREE NARAYAN AGENCY KOLKATA","SHREE SAI DISTRIBUTION Pune","SHREE SHYAM TRADERS DHOLPUR","SHREE VAISHNO TRADERS AMBALA","SHRI BALAJI UDHYOGS (GORAKHPUR)","SHRI KAILASH STORES AHMEDNAGAR","SHRI NARMADA CONFECTIONARY HARDA","SHRI NIRMAL SALES AHMEDNAGAR","SHRi RADHA KRISHAN MARKETING SHEOPUR","SHUBH LABH ENTERPRISES( Ramganjmandi)","SIDRA TRADERS INDORE","SINGLA SALES AGENCY HANSI","SRI GANESH SWEET STORES DHULIA","SUNIL TRADERS , BANSWARA","SURIA DISTRIBUTOR MALDA","SUSHMA TRADERS JAIPUR","Sahil Trades DELHI","Sahu Traders RAIRANGPUR","Sai Baba Enterprises Lucknow","Sai Candies & Toffees Ulhasnagar","Satguru Traders Jodhpur","Satyam  Goli  Bhandar Hingoli","Shailendra Trading Co. MORADABAD","Shashi Traders Belagavi","Shiv Guru Traders Gaya","Shivaji Sales Palia Kalan","Shree Manglam Enterprises Sasram","Shree Om Traders , GAYA","Shree Pharma Wardha","Shree Shyam Enterprises Hazaribag","Shri Paras Agencies HATHRAS","Solitaire Impex General Trading Company","Sudha Sales Kanpur","Sweetworld Foods India Pvt. Ltd.","THE ROYAL CONFECTIONERS INDORE","THE SUN MARKETING ALLIANCE HAPUR","TISKA FOOD INTERNATIONAL","Thangam Traders Chennai","Tirthankar-24 Private Limited DHAR","UNITED ENTERPRISES INDORE","URP - FLIPKART & MEESHO","Umraw Trading Company Hyderabad","Universal Consumer Care NANDURA","VAISHNO FOOD PRODUCTS AGRA","VARDHMAN ENTERPRISES PUNE","VEERA ENTERPRISE VAPI","VENYA ENTERPRISES KANPUR","VIJAY STORE Timarni","VISHAL AGENCIES Bhopal","Variety confectionery RATLAM","Vinayak Enterprises GHAZIABAD","Vishal Traders  Dhanbad","Vishnu Traders, Khilchipur","Wahoo Product KOLKATA","YUVRAJ AGENCY BALLIA","Yachana Enterprises SURAT","Yash Agencies Latur","Yes Trading Corporation Kalaburagi","ZUBAIR TRADING CO. ANANTNAG"];
+
+let allClients = [...STATIC_CLIENTS]; // immediately available
+
+async function fetchClients() {
+  // Static list is already loaded — dropdown works instantly.
+  // Attempt live GAS fetch in background; silently updates allClients if newer data comes in.
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 10000); // 10-second timeout
+    const resp = await fetch(WEB_APP_URL + '?action=getClients', { signal: ctrl.signal });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (Array.isArray(data) && data.length) {
+        allClients = data; // live update — new/inactive clients reflected immediately
+        console.log('✅ Live client list loaded:', allClients.length, 'clients');
+        return;
+      }
+      if (data.error) console.warn('GAS getClients error:', data.error);
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') console.warn('GAS fetchClients failed (using static list):', e);
+  }
+  // Static list remains active — no toast, no disruption
+}
+
+function setupPartyCombo() {
+  const inp  = document.getElementById('txtParty');
+  const drop = document.getElementById('partyDropdown');
+  let activeIdx = -1;
+
+  function positionDrop() {
+    const rect = inp.getBoundingClientRect();
+    drop.style.top   = (rect.bottom + 2) + 'px';
+    drop.style.left  = rect.left + 'px';
+    drop.style.width = rect.width + 'px';
+  }
+
+  inp.addEventListener('input', () => {
+    updateSubmitScreen();
+    renderItemCards();
+    const q = inp.value.trim().toLowerCase();
+    if (!q || !allClients.length) { drop.classList.remove('open'); return; }
+    const filtered = allClients.filter(c => c.toLowerCase().includes(q)).slice(0, 25);
+    if (!filtered.length) { drop.classList.remove('open'); return; }
+    activeIdx = -1;
+    drop.innerHTML = filtered.map((c, i) =>
+      `<div class="party-option" data-val="${c.replace(/"/g,'&quot;')}" data-idx="${i}">${c}</div>`
+    ).join('');
+    positionDrop();
+    drop.classList.add('open');
+    drop.querySelectorAll('.party-option').forEach(el => {
+      el.addEventListener('mousedown', ev => {
+        ev.preventDefault();
+        inp.value = el.dataset.val;
+        drop.classList.remove('open');
+        updateSubmitScreen();
+        renderItemCards();
+      });
+    });
+  });
+
+  inp.addEventListener('keydown', e => {
+    const opts = drop.querySelectorAll('.party-option');
+    if (!drop.classList.contains('open') || !opts.length) return;
+    if (e.key === 'ArrowDown') { activeIdx = Math.min(activeIdx + 1, opts.length - 1); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { activeIdx = Math.max(activeIdx - 1, 0); e.preventDefault(); }
+    else if (e.key === 'Enter' && activeIdx >= 0) {
+      inp.value = opts[activeIdx].dataset.val;
+      drop.classList.remove('open');
+      updateSubmitScreen(); renderItemCards();
+      e.preventDefault();
+    } else if (e.key === 'Escape') { drop.classList.remove('open'); }
+    opts.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+    if (activeIdx >= 0) opts[activeIdx].scrollIntoView({ block: 'nearest' });
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.party-combo-wrap')) drop.classList.remove('open');
+  });
+}
 
 async function fetchProducts() {
   const sub = document.getElementById('greetingSubtitle');
@@ -1279,11 +1379,9 @@ window.onload = function() {
   document.getElementById('cmbSegment').onchange = onSegmentChange;
   document.getElementById('txtProduct').addEventListener('input', onProductInput);
   document.getElementById('txtProduct').addEventListener('change', onProductInput);
-  document.getElementById('txtParty').addEventListener('input', () => {
-    updateSubmitScreen();
-    renderItemCards();
-  });
   document.getElementById('app').classList.add('customer-mode');
+  setupPartyCombo();
+  fetchClients();
   fetchProducts();
 };
 </script>
