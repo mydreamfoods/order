@@ -1302,7 +1302,6 @@ async function saveOrder() {
     if (result.startsWith('ERROR')) throw new Error(result.replace('ERROR: ',''));
     const orderNo = isEdit ? editingOrderNo : result.trim();
     showToast(isEdit ? `✅ Order ${orderNo} updated!` : `✅ Order ${orderNo} saved!`, 'success');
-    alert(isEdit ? `🎉 Order ${orderNo} updated successfully!` : `🎉 Order ${orderNo} saved successfully!`);
     clearForm(true);
     switchTab('Order');
   } catch (err) {
