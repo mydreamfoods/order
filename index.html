@@ -512,6 +512,7 @@
         <div class="action-row" style="margin-top:12px;">
           <button class="btn btn-success" onclick="addItem()">➕ Add Item</button>
           <button class="btn btn-warn" id="updateBtn" onclick="updateItem()" disabled>✏️ Update</button>
+          <button class="btn" style="background:#7c3aed;color:#fff;" onclick="openPasteModal()">📋 Paste Items</button>
         </div>
       </div>
       <div class="note-box" style="margin-top:8px;">
@@ -632,7 +633,7 @@ let allProducts        = [];
 let companiesList      = [];
 let companySegments    = {};  // company → segments available
 // ── Static client list — instant fallback, always available ──────────────────
-const STATIC_CLIENTS = ["AK TRADERS AURANGABAD","ALFARHAN & SONS STORE, SHAHGANJ","ALI TRADERS SIWAN","AMAN AGENT &TRADERS (Palwal)","AMBER AGENCIES KANPUR","AMIT TRADERS BURHANPUR","ANIL AGENCY SATNA","ASHUTOSH ENTERPRISES MEERUT","Aamantran ( JAMMU )","Aamjn Business Corporation","Abhinandan Traders Jalgaon","Akshay Purohit Nath Dwara","Anil Trading Nanded","Ankur Cold Drinks and Confectionery","Annapurna Distribution House RAJPUR","Ashok Agency AURANGABAD","BAFNA TRADERS BASMAT","BAHETI TRADING CO ISLAMPUR","Balaji Traders KOTA","BanaShankari Traders VIJAYPURA","Bhagat Sales KHAIRTAL","Bhagwan Sweet Stores Ajmer","Brahmakshatriya Sales Banaskantha","CHOCOLATE HOUSE SUJANGARH","Chirag Trading chennai","D MART NIPANIA","DALIM STORES MURSHIDABAD","DAWKII MARKETING PVT LTD AGARTALA","DEEPAK AGENCIES CHITRAKOOT","DEEPAK CONFECTIONERY AGRA","DEV TRADERS UDAIPUR","DEWANI STORE BAREILLY","DEWANI TRADERS BAREILLY","DROWPADI STORES JIBANTALA","DURGA TRADING COMPANY MUZZAFARNAGAR","Deep Agencies Nagpur","Flipkart Internet Private Limited","Funtime Food","GANESH FOOD AND CONFECTIONERY RAIGARH","GAURAV ENTEPRISES JAIPUR","GOPAL ENTERPRISES MODINAGAR","GOPI SWEETS AKOLA","GURUKRIPA CONFECTIONERY NASIK","GURUNANAK CONFECTIONERY Pachora","GYAN TRADERS JHALRAPATAN","Ganesh Enterprises & Events Raigarh","Garg Agencies ROORKEE","Gouri Enterprise Uttar Dinajpur","Gulwani Enterprises","H.R. TRADERS KANTH MORADABAD","HARI OM  CONFECTIONARY BHILWADA","HARI OM SWEETS NEEMUCH","Haldi Ram Ghyasi Ram & Sons  Bharatpur","Hameed Enterprises Belagavi","Hamja Traders Rahuri","Harish Trading Company","Harshit Enterprises Bihar","JAI BABA SALES RAIPUR","JAI MARKETING KHANDWA","JAIN TRADERS BARNALA","JAISWAL TRADERS KISHANGANJ","JAY AMBE TRADERS BHAVNAGAR","JINDAL CONFECTIONERY KAITHAL","JOY SANTOSHI CONFECTIONERY POROLDA","Janta Sweets Jamnagar","Jeetu Trading Company","KAPUR CONFECTIONERS DELHI","KASOUDHAN AGENCY GHAZIPUR","KAUSHAL MARKETING (Guwahati)","KBL ENTERPRISES RAXAUL","KDR Marketing Guwahati","KESHAV STORE GULAB BAG","KISHAN GOLI WALA KOTA","KISHORE AGENCY JABALPUR","KOMAL TRADERS FARRUKHABAD","KRISHNA AGENCY RISHIKESH","KRISHNA ENTERPRISES, DAWA BAZAR INDORE","KUSH KUMAR & COMPANY BARAN","Kailas Stores Malegaon","Kailash Chandra Goyal","Kamla Toffee Supliers MAKRANA","Kavya Traders BASTI","Komal Enterprises Indore","Krishna Marketing ,Bulandshahr","Krishna Traders , Sikar","LACHIT AGENCY JORHAT","LAVESH DHARMANI DEOLI","LAXMI CONFECTIONERY Rae Bareli","LOVE TRADING JHANSI","M.R. Traders Barnala","M/S CHOCOLATE HOUSE JALORE","M/s SATNAM AGENCY KARAULI RAJESTHAN","MAA KALI ENTERPRISES, MEDINIPUR","MADHUR TRADERS ULHASNAGAR","MAHADEV BISCUITS GORAKHPUR","MAMTA ENTERPRISES VARANASI","MANOJ KUMAR AAGRA","MANZOOR And COMPANY (Srinagar)","MEGHDOOT AGENCIES BHOPAL","MOHIT CONFACTARY CHITTORGARH","MUKESH TRADERS PATNA","Mahavir Traders Barnala","Mangla Agency AMBIKAPUR","Meerut Chocolate Company","Mehraj Milk Supply ANANTNAG","Mehraj Milk Supply NAI BASTI","Mohit Confectionery Store Tohana","Mohit Enterprises KUSHALGARH DBTRS","Ms Enterprise SUNDANGARH","NAKODA CHOCOLATE HUBLI","NANAK STORES BHOPAL","NAYYAR TRADING CO. LUDHIYANA","NEW AKASH SWEETS NANDURA","NEW OM SWEETS (AMALNER)","NITU ENTERPRISES","New Prince Stores Dhar","OM GENERAL STORES MORADABAD","OM MARKETING RAJKOT","OM SATYA SAI AGENCIES RAJAHMUNDRY","OM TRADERS , PRATAPGARH","Om Sai Traders Bnada","Om Shri Traders ITARSI","PIPADA TRADERS NIMBHERA","PRAGATI TRADERS, BALAGHAT","PRANAT TRADERS PACHORE","PRITAM ENTERPRICES GWALIOR","PRIYA STORE DHOLPUR","Paresh Traders Surendranagar","Pawan Agritech","Poona Sweet Products Jodhpur","Prakash Kumar Sawaldas Bina","Prakash Traders KHANDWA","Pratap Rai and Sons Private Limited Bareilly","Pratap Rai and Sons Private Limited Lucknow","Pravin Store Junagadh","Premalaya SSILIGURI","Punit Maheshwari Nathdvara","R.M.TRADING CO. KANPUR","RADHIKA ENTERPRISES SUNDARGARH","RAJ SWEETS UJJAIN","RAJA ENTERPRISES Ratlam","RAJAL ENTERPRISE BHUJ KUTCH","RAJDEEP SALES & MARKETING JAGATDAL","RAJESH SANWALDAS KARIRA","REJA STORES MALDA","ROSHAN ENTERPRISES NARAYAN GOAN","ROYAL CONFECTIONERY, SAHARANPUR","RUSHABH TRADING SURENDRANAGAR","Radhika Confectonary Bilaspur","Rajasthan Choclate House MADHURAI","Rajendra Kumar Ashish Kumar Tonk","Ramesh Kumar and Sons AMRITSAR","Ratn Raj Collection & Concessionary MANAWARa","Rayon Systems Banglore","Ritesh Traders RAJGARH DHAR","Rohit Agencies Gondia","Roshantaj Enterprises Hindupur","S.P. TRADERS BAREILLY","S.P. TRADING COMPANY KARNAL","SADIKUL SEKH (MURSHIDABAD)","SAIBABA AGENCY AHMEDABADD","SANJAY TRADERS Khandwa","SANJAY TRAVELS","SANMATI KIRANA STORE PACHORE","SATNAM AGENCY KARAULI","SHAN ENTERPRISES GONDA","SHIVAM TRADERS CHANDAUSI","SHOAIB STORES ' Malda'","SHREE AGENCIES MANDSAUR","SHREE KHATU SHYAM ENTERPRISES ( KAITHAL)","SHREE NARAYAN AGENCY KOLKATA","SHREE SAI DISTRIBUTION Pune","SHREE SHYAM TRADERS DHOLPUR","SHREE VAISHNO TRADERS AMBALA","SHRI BALAJI UDHYOGS (GORAKHPUR)","SHRI KAILASH STORES AHMEDNAGAR","SHRI NARMADA CONFECTIONARY HARDA","SHRI NIRMAL SALES AHMEDNAGAR","SHRi RADHA KRISHAN MARKETING SHEOPUR","SHUBH LABH ENTERPRISES( Ramganjmandi)","SIDRA TRADERS INDORE","SINGLA SALES AGENCY HANSI","SRI GANESH SWEET STORES DHULIA","SUNIL TRADERS , BANSWARA","SURIA DISTRIBUTOR MALDA","SUSHMA TRADERS JAIPUR","Sahil Trades DELHI","Sahu Traders RAIRANGPUR","Sai Baba Enterprises Lucknow","Sai Candies & Toffees Ulhasnagar","Satguru Traders Jodhpur","Satyam  Goli  Bhandar Hingoli","Shailendra Trading Co. MORADABAD","Shashi Traders Belagavi","Shiv Guru Traders Gaya","Shivaji Sales Palia Kalan","Shree Manglam Enterprises Sasram","Shree Om Traders , GAYA","Shree Pharma Wardha","Shree Shyam Enterprises Hazaribag","Shri Paras Agencies HATHRAS","Solitaire Impex General Trading Company","Sudha Sales Kanpur","Sweetworld Foods India Pvt. Ltd.","THE ROYAL CONFECTIONERS INDORE","THE SUN MARKETING ALLIANCE HAPUR","TISKA FOOD INTERNATIONAL","Thangam Traders Chennai","Tirthankar-24 Private Limited DHAR","UNITED ENTERPRISES INDORE","URP - FLIPKART & MEESHO","Umraw Trading Company Hyderabad","Universal Consumer Care NANDURA","VAISHNO FOOD PRODUCTS AGRA","VARDHMAN ENTERPRISES PUNE","VEERA ENTERPRISE VAPI","VENYA ENTERPRISES KANPUR","VIJAY STORE Timarni","VISHAL AGENCIES Bhopal","Variety confectionery RATLAM","Vinayak Enterprises GHAZIABAD","Vishal Traders  Dhanbad","Vishnu Traders, Khilchipur","Wahoo Product KOLKATA","YUVRAJ AGENCY BALLIA","Yachana Enterprises SURAT","Yash Agencies Latur","Yes Trading Corporation Kalaburagi","ZUBAIR TRADING CO. ANANTNAG"];
+const STATIC_CLIENTS = ["A l A Enterprises, Purbi, Mednipur", "AK TRADERS AURANGABAD", "ALFARHAN & SONS STORE, SHAHGANJ", "ALI TRADERS SIWAN", "AMAN AGENT & TRADERS (Palwal)", "AMBER AGENCIES KANPUR", "AMIT TRADERS BURHANPUR", "ANIL AGENCY SATNA", "ASHUTOSH ENTERPRISES MEERUT", "Aamantran ( JAMMU )", "Aamjn Business Corporation", "Abhinandan Traders Jalgaon", "Ajay Stores, Gandhinagar", "Akshay Purohit Nath Dwara", "Amjan Business Corporation, Dhampur", "Anil Trading Nanded", "Ankur Cold Drinks and Confectionery", "Annapurna Distribution House RAJPUR", "Annapurna Marketing, Raxaul", "Ashok Agency AURANGABAD", "BAFNA TRADERS BASMAT", "BAHETI TRADING CO ISLAMPUR", "Balaji Traders KOTA", "BanaShankari Traders VIJAYPURA", "Bhagat Sales KHAIRTAL", "Bhagwan Sweet Stores Ajmer", "Brahmakshatriya Sales Banaskantha", "CHOCOLATE HOUSE SUJANGARH", "Chirag Trading chennai", "Choudhary Enterprises, Muzaffarnagar", "D MART NIPANIA", "DALIM STORES MURSHIDABAD", "DAWKII MARKETING PVT LTD AGARTALA", "DEEPAK AGENCIES CHITRAKOOT", "DEEPAK CONFECTIONERY AGRA", "DEV TRADERS UDAIPUR", "DROWPADI STORES JIBANTALA", "DURGA TRADING COMPANY MUZZAFARNAGAR", "Dawkii Marketing, Agartala", "Deep Agencies Nagpur", "Dewani Store Bareilly", "Flipkart Internet Private Limited", "Funtime Food", "GANESH FOOD AND CONFECTIONERY RAIGARH", "GAURAV ENTEPRISES JAIPUR", "GOPAL ENTERPRISES MODINAGAR", "GOPI SWEETS AKOLA", "GURUKRIPA CONFECTIONERY NASIK", "GURUNANAK CONFECTIONERY Pachora", "GYAN TRADERS JHALRAPATAN", "Ganesh Enterprises & Events Raigarh", "Garg Agencies ROORKEE", "Gaurav Enterprise, Hyderabad", "Gouri Enterprise Uttar Dinajpur", "Gulwani Enterprises", "Gunjan Enterprises, Vadodara", "H.R. TRADERS KANTH MORADABAD", "HARI OM  CONFECTIONARY BHILWADA", "HARI OM SWEETS NEEMUCH", "Haldi Ram Ghyasi Ram & Sons  Bharatpur", "Hameed Enterprises Belagavi", "Hamja Traders Rahuri", "Hamja Traders, Rahuri", "Harish Trading Company", "Harshit Enterprises Bihar", "Harshit Trading Company, Pokran", "JAI BABA SALES RAIPUR", "JAI MARKETING KHANDWA", "JAIN TRADERS BARNALA", "JAISWAL TRADERS KISHANGANJ", "JAY AMBE TRADERS BHAVNAGAR", "JINDAL CONFECTIONERY KAITHAL", "JOY SANTOSHI CONFECTIONERY POROLDA", "Jain Confectionary, Jhalawar", "Jain Confectionery, Jhalawar, RJ", "Janta Sweets Jamnagar", "Jayalakshmi Trader, Solapur", "Jeetu Trading Company", "KAPUR CONFECTIONERS DELHI", "KASOUDHAN AGENCY GHAZIPUR", "KAUSHAL MARKETING (Guwahati)", "KBL ENTERPRISES RAXAUL", "KDR Marketing Guwahati", "KESHAV STORE GULAB BAG", "KISHAN GOLI WALA KOTA", "KISHORE AGENCY JABALPUR", "KOMAL TRADERS FARRUKHABAD", "KRISHNA AGENCY RISHIKESH", "KRISHNA ENTERPRISES, DAWA BAZAR INDORE", "KUSH KUMAR & COMPANY BARAN", "Kailas Stores Malegaon", "Kailash Chandra Goyal", "Kailashpati Enterprises, Gwalior", "Kamla Toffee Supliers MAKRANA", "Kanha-g Food, Ranchi", "Kavya Traders BASTI", "Komal Enterprises Indore", "Krishna Marketing ,Bulandshahr", "Krishna Traders , Sikar", "LACHIT AGENCY JORHAT", "LAVESH DHARMANI DEOLI", "LAXMI CONFECTIONERY Rae Bareli", "LOVE TRADING JHANSI", "Laxmi Narayan Agency, Siyanganj, Indore", "M.R. Traders Barnala", "M/S CHOCOLATE HOUSE JALORE", "M/s SATNAM AGENCY KARAULI RAJESTHAN", "M/s Sanskrit Sales Corporation, Kanpur", "MAA KALI ENTERPRISES, MEDINIPUR", "MADHUR TRADERS ULHASNAGAR", "MAHADEV BISCUITS GORAKHPUR", "MAMTA ENTERPRISES VARANASI", "MANOJ KUMAR AAGRA", "MANZOOR And COMPANY (Srinagar)", "MEGHDOOT AGENCIES BHOPAL", "MOHIT CONFECTIONARY CHITTORGARH", "MUKESH TRADERS PATNA", "Mahavir Traders Barnala", "Mahesh Trading, Dahod", "Mangla Agency AMBIKAPUR", "Meerut Chocolate Company", "Mehraj Milk Supply ANANTNAG", "Mehraj Milk Supply NAI BASTI", "Mohit Confectionery Store Tohana", "Mohit Enterprises KUSHALGARH DBTRS", "Ms Enterprise SUNDANGARH", "NAKODA CHOCOLATE HUBLI", "NANAK STORES BHOPAL", "NAYYAR TRADING CO. LUDHIYANA", "NEW AKASH SWEETS NANDURA", "NEW OM SWEETS (AMALNER)", "NITU ENTERPRISES", "New Prince Stores Dhar", "OM GENERAL STORES MORADABAD", "OM MARKETING RAJKOT", "OM SATYA SAI AGENCIES RAJAHMUNDRY", "OM TRADERS , PRATAPGARH", "Om Sai Enterprises, Amreli", "Om Sai Traders Bnada", "Om Shri Traders ITARSI", "PIPADA TRADERS NIMBHERA", "PRAGATI TRADERS, BALAGHAT", "PRANAT TRADERS PACHORE", "PRITAM ENTERPRICES GWALIOR", "PRIYA STORE DHOLPUR", "Paresh Trader, Surendranagar", "Paresh Traders Surendranagar", "Pawan Agritech", "Poona Sweet Products Jodhpur", "Prakash Kumar Sawaldas Bina", "Prakash Traders KHANDWA", "Prakash Traders, Pune", "Pratap Rai and Sons Private Limited Bareilly", "Pratap Rai and Sons Private Limited Lucknow", "Pratiksha Sales Agency, Thandla", "Pravin Store Junagadh", "Premalaya SSILIGURI", "Priya Confectionery, Dhanbad", "Punit Maheshwari Nathdvara", "R.M.TRADING CO. KANPUR", "RADHIKA ENTERPRISES SUNDARGARH", "RAJ SWEETS UJJAIN", "RAJA ENTERPRISES Ratlam", "RAJAL ENTERPRISE BHUJ KUTCH", "RAJDEEP SALES & MARKETING JAGATDAL", "RAJESH SANWALDAS KARIRA", "REJA STORES MALDA", "ROSHAN ENTERPRISES NARAYAN GOAN", "ROYAL CONFECTIONERY, SAHARANPUR", "RUSHABH TRADING SURENDRANAGAR", "Radhika Confectonary Bilaspur", "Radhika Enterprises, Sundargarh", "Rajasthan Choclate House MADHURAI", "Rajendra Kumar Ashish Kumar Tonk", "Ramesh Enterprises, Sri Ganganagar", "Ramesh Kumar and Sons AMRITSAR", "Ranganata Enterprises, Bengaluru", "Ratn Raj Collection & Concessionary MANAWARa", "Rayon Systems Banglore", "Ritesh Traders RAJGARH DHAR", "Rohit Agencies Gondia", "Roshantaj Enterprises Hindupur", "Roshantaj Enterprises, Rahuri", "S.P. TRADERS BAREILLY", "S.P. TRADING COMPANY KARNAL", "SADIKUL SEKH (MURSHIDABAD)", "SAIBABA AGENCY AHMEDABADD", "SANJAY TRADERS Khandwa", "SANJAY TRAVELS", "SANMATI KIRANA STORE PACHORE", "SATNAM AGENCY KARAULI", "SHAN ENTERPRISES GONDA", "SHIVAM TRADERS CHANDAUSI", "SHOAIB STORES ' Malda'", "SHREE AGENCIES MANDSAUR", "SHREE KHATU SHYAM ENTERPRISES ( KAITHAL)", "SHREE NARAYAN AGENCY KOLKATA", "SHREE SAI DISTRIBUTION Pune", "SHREE SHYAM TRADERS DHOLPUR", "SHREE VAISHNO TRADERS AMBALA", "SHRI BALAJI UDHYOGS (GORAKHPUR)", "SHRI KAILASH STORES AHMEDNAGAR", "SHRI NARMADA CONFECTIONARY HARDA", "SHRI NIRMAL SALES AHMEDNAGAR", "SHRi RADHA KRISHAN MARKETING SHEOPUR", "SHUBH LABH ENTERPRISES( Ramganjmandi)", "SIDRA TRADERS INDORE", "SINGLA SALES AGENCY HANSI", "SRI GANESH SWEET STORES DHULIA", "SUNIL TRADERS , BANSWARA", "SURIA DISTRIBUTOR MALDA", "SUSHMA TRADERS JAIPUR", "Sahil Trades DELHI", "Sahu Traders RAIRANGPUR", "Sai Baba Enterprises Lucknow", "Sai Candies & Toffees Ulhasnagar", "Satguru Traders Jodhpur", "Satyam  Goli  Bhandar Hingoli", "Sehat packers & suppliers, Raigarh", "Shailendra Trading Co. MORADABAD", "Shashi Traders Belagavi", "Shiv Guru Traders Gaya", "Shivaji Sales Palia Kalan", "Shree Manglam Enterprises Sasram", "Shree Om Traders , GAYA", "Shree Pharma Wardha", "Shree Shakti Traders, Fatehpur", "Shree Shyam Enterprises Hazaribag", "Shri Paras Agencies HATHRAS", "Shriniwas goli bhandar, Yawatmal", "Solitaire Impex General Trading Company", "Sudha Sales Kanpur", "Swati Foods, Vikasnagar", "Sweetworld Foods India Pvt. Ltd.", "THE ROYAL CONFECTIONERS INDORE", "THE SUN MARKETING ALLIANCE HAPUR", "TISKA FOOD INTERNATIONAL", "Tarun & Company, Parwanoo, HP", "Thangam Traders Chennai", "Tirthankar-24 Private Limited DHAR", "UNITED ENTERPRISES INDORE", "URP - FLIPKART & MEESHO", "Umraw Trading Company Hyderabad", "Universal Consumer Care NANDURA", "VAISHNO FOOD PRODUCTS AGRA", "VARDHMAN ENTERPRISES PUNE", "VEERA ENTERPRISE VAPI", "VENYA ENTERPRISES KANPUR", "VIJAY STORE Timarni", "VISHAL AGENCIES Bhopal", "Vadika Agency, Janjgir Champa, CG", "Variety confectionery RATLAM", "Vedika Agency", "Vinayak Enterprises GHAZIABAD", "Vishal Traders  Dhanbad", "Vishnu Traders, Khilchipur", "Wahoo Product KOLKATA", "YUVRAJ AGENCY BALLIA", "Yachana Enterprises SURAT", "Yash Agencies Latur", "Yes Trading Corporation Kalaburagi", "Yogesh Agency, Bikaner", "ZUBAIR TRADING CO. ANANTNAG"];
 
 let allClients = [...STATIC_CLIENTS]; // immediately available
 
@@ -1383,6 +1384,122 @@ window.onload = function() {
   fetchClients();
   fetchProducts();
 };
+
+// ── Paste Items Modal ─────────────────────────────────────────────────────────
+function openPasteModal() {
+  const party = document.getElementById('txtParty').value.trim();
+  if (!party) { showToast('❌ Enter Party Name first', 'error'); return; }
+  document.getElementById('pasteModal').style.display = 'flex';
+  document.getElementById('pasteTxt').focus();
+}
+function closePasteModal() {
+  document.getElementById('pasteModal').style.display = 'none';
+  document.getElementById('pasteTxt').value = '';
+  document.getElementById('pastePreview').innerHTML = '';
+}
+
+function fuzzyMatchProduct(query) {
+  // Normalize: lowercase, remove special chars
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+  // Common phonetic replacements for user's typing patterns
+  const phone = s => s
+    .replace(/stoberry/g,'strawberry').replace(/emli/g,'imli').replace(/endy/g,'andy')
+    .replace(/tedy/g,'teddy').replace(/donet/g,'donut').replace(/monky/g,'monkey')
+    .replace(/monstar/g,'monster').replace(/frugy/g,'fruity').replace(/fruzy/g,'fruity')
+    .replace(/sorse/g,'source').replace(/cutti/g,'chhoti').replace(/jelly/g,'jelly')
+    .replace(/biggy/g,'biggy').replace(/zinga/g,'zinga').replace(/wafer/g,'wafer')
+    .replace(/choky/g,'choco').replace(/contenar/g,'container').replace(/wali/g,'')
+    .replace(/pic$/g,'').replace(/\d+\s*pic/g,'').replace(/\s+/g,' ').trim();
+
+  const q = phone(norm(query));
+  const qWords = q.split(' ').filter(Boolean);
+
+  let best = null, bestScore = -1;
+
+  // Search all products across all segments
+  Object.entries(productsBySegment).forEach(([seg, prods]) => {
+    prods.forEach(prod => {
+      const p = phone(norm(prod));
+      const pWords = p.split(' ').filter(Boolean);
+      // Count matching words (both directions)
+      let score = 0;
+      qWords.forEach(w => { if (w.length > 1 && p.includes(w)) score += 2; });
+      pWords.forEach(w => { if (w.length > 1 && q.includes(w)) score += 1; });
+      // Exact substring bonus
+      if (p.includes(q) || q.includes(p)) score += 5;
+      if (score > bestScore) { bestScore = score; best = { seg, prod }; }
+    });
+  });
+  return bestScore > 0 ? best : null;
+}
+
+function parsePasteLines() {
+  const lines = document.getElementById('pasteTxt').value.split('\n');
+  const preview = document.getElementById('pastePreview');
+  preview.innerHTML = '';
+  const parsed = [];
+
+  lines.forEach((line, i) => {
+    line = line.trim();
+    if (!line) return;
+    // Format: {qty} cr {product name...}
+    const m = line.match(/^(\d+)\s+cr\s+(.+)$/i);
+    if (!m) {
+      preview.innerHTML += `<div style="color:#ef4444;padding:2px 0;font-size:12px;">❌ Line ${i+1}: Can't parse — "${line}"</div>`;
+      return;
+    }
+    const qty = parseInt(m[1]);
+    const rawName = m[2].trim();
+    const match = fuzzyMatchProduct(rawName);
+    if (!match) {
+      preview.innerHTML += `<div style="color:#f59e0b;padding:2px 0;font-size:12px;">⚠️ No match: <b>${rawName}</b></div>`;
+      return;
+    }
+    const size = productSizeMap[match.prod] || 1;
+    parsed.push({ qty, rawName, seg: match.seg, prod: match.prod, size });
+    preview.innerHTML += `<div style="color:#22c55e;padding:2px 0;font-size:12px;">✅ ${qty} cr → <b>${match.prod}</b> <span style="color:#94a3b8">(${match.seg})</span></div>`;
+  });
+
+  preview._parsed = parsed;
+  if (parsed.length > 0) {
+    document.getElementById('pasteAddBtn').disabled = false;
+    document.getElementById('pasteAddBtn').textContent = `➕ Add ${parsed.length} Items`;
+  } else {
+    document.getElementById('pasteAddBtn').disabled = true;
+    document.getElementById('pasteAddBtn').textContent = 'Add Items';
+  }
+}
+
+function confirmPasteItems() {
+  const parsed = document.getElementById('pastePreview')._parsed || [];
+  if (!parsed.length) return;
+  parsed.forEach(p => {
+    items.push({
+      seg: p.seg, prod: p.prod, unit: 'Ctn',
+      qty: p.qty, rate: 0, size: p.size,
+      discType: '%', disc: 0, remarks: '', amount: 0
+    });
+  });
+  updateAll();
+  closePasteModal();
+  showToast(`✅ ${parsed.length} items added! Set rates in item list.`, 'success');
+  switchTab('Items');
+}
 </script>
+
+<!-- Paste Items Modal -->
+<div id="pasteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;padding:20px;max-height:90vh;overflow-y:auto;">
+    <div style="font-weight:700;font-size:16px;margin-bottom:12px;">📋 Paste Order Items</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Format: <code>5 cr product name</code> — one per line</div>
+    <textarea id="pasteTxt" rows="10" style="width:100%;border:1.5px solid #c7d2fe;border-radius:8px;padding:10px;font-size:13px;resize:vertical;box-sizing:border-box;" placeholder="10 cr milky 1 wali&#10;5 cr rose 1 wali&#10;..."></textarea>
+    <button onclick="parsePasteLines()" style="margin-top:8px;width:100%;padding:10px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">🔍 Preview Match</button>
+    <div id="pastePreview" style="margin-top:10px;max-height:200px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:12px;"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button id="pasteAddBtn" onclick="confirmPasteItems()" disabled style="flex:1;padding:11px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Add Items</button>
+      <button onclick="closePasteModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
