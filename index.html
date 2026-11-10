@@ -299,21 +299,6 @@
     text-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
   .summary-sub { font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 700; }
-  /* ── Party combobox ── */
-  .party-combo-wrap { position: relative; }
-  .party-dropdown {
-    display: none; position: fixed; z-index: 9999;
-    background: #fff; border: 1.5px solid #c7d2fe;
-    border-radius: 10px; max-height: 220px; overflow-y: auto;
-    box-shadow: 0 6px 20px rgba(99,102,241,0.15);
-  }
-  .party-dropdown.open { display: block; }
-  .party-option {
-    padding: 10px 14px; cursor: pointer; font-size: 14px;
-    border-bottom: 1px solid #f0f4ff; color: var(--text);
-  }
-  .party-option:last-child { border-bottom: none; }
-  .party-option:hover, .party-option.active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
   /* ── Party chip ── */
   .party-chip {
     display: inline-flex; align-items: center; gap: 6px;
@@ -380,6 +365,54 @@
   .greeting-card p { font-size: 13px; color: var(--muted); font-weight: 600; }
   /* ── Edit mode banner ── */
   .edit-banner { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.35); color: var(--warn); }
+  /* ── Party combobox dropdown ── */
+  .party-dropdown {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: var(--surface);
+    border: 1.5px solid var(--accent);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(99,102,241,0.18);
+    max-height: 220px;
+    overflow-y: auto;
+    min-width: 240px;
+  }
+  .party-dropdown.open { display: block; }
+  .party-opt {
+    padding: 10px 14px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .party-opt:last-child { border-bottom: none; }
+  .party-opt:hover, .party-opt.active { background: rgba(99,102,241,0.08); color: var(--accent); }
+  /* ── Paste Items Modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 10000;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px 32px;
+    width: 100%; max-width: 540px;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal-sheet h3 { font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+  .modal-sheet p  { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+  #pasteTextarea {
+    width: 100%; min-height: 140px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; font-size: 13px; font-family: 'DM Mono', monospace;
+    resize: vertical;
+  }
+  #pastePreview { margin-top: 12px; font-size: 12px; }
+  .paste-row-ok   { color: var(--green); font-weight: 700; padding: 2px 0; }
+  .paste-row-warn { color: var(--warn);  font-weight: 700; padding: 2px 0; }
+  .paste-row-err  { color: var(--danger);font-weight: 700; padding: 2px 0; }
 </style>
 </head>
 <body>
@@ -415,12 +448,10 @@
             <div class="field-label">📅 Date</div>
             <input type="date" id="txtDate">
           </div>
-          <div class="field-group" style="flex:1;">
+          <div class="field-group" style="flex:1; position:relative;" id="partyFieldGroup">
             <div class="field-label">👥 Party Name with City</div>
-            <div class="party-combo-wrap">
-              <input type="text" id="txtParty" placeholder="Type to search client..." autocomplete="off">
-              <div id="partyDropdown" class="party-dropdown"></div>
-            </div>
+            <input type="text" id="txtParty" placeholder="Type to search…" autocomplete="off">
+            <div id="partyDrop" class="party-dropdown"></div>
           </div>
         </div>
       </div>
@@ -512,7 +543,7 @@
         <div class="action-row" style="margin-top:12px;">
           <button class="btn btn-success" onclick="addItem()">➕ Add Item</button>
           <button class="btn btn-warn" id="updateBtn" onclick="updateItem()" disabled>✏️ Update</button>
-          <button class="btn" style="background:#7c3aed;color:#fff;" onclick="openPasteModal()">📋 Paste Items</button>
+          <button class="btn btn-blue" onclick="openPasteModal()" type="button">📋 Paste Items</button>
         </div>
       </div>
       <div class="note-box" style="margin-top:8px;">
@@ -577,6 +608,20 @@
       </div>
     </div>
   </div><!-- /screen-wrap -->
+  <!-- Paste Items Modal -->
+  <div class="modal-overlay" id="pasteModal">
+    <div class="modal-sheet">
+      <h3>📋 Paste Items</h3>
+      <p>One item per line: <b>{qty} cr {product name}</b><br>
+         e.g. <code>5 cr Milky Cube x48</code> or <code>10cr kings</code></p>
+      <textarea id="pasteTextarea" placeholder="5 cr Milky Cube x48&#10;3 cr Cremelol Cup&#10;8cr imli zinga"></textarea>
+      <div id="pastePreview"></div>
+      <div class="action-row" style="margin-top:14px; gap:10px;">
+        <button class="btn btn-success" onclick="confirmPasteItems()">✅ Add All Matched</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('pasteModal').classList.remove('open')">✖ Cancel</button>
+      </div>
+    </div>
+  </div>
   <!-- Bottom Nav -->
   <nav class="bottom-nav">
     <button class="nav-btn active" id="navOrder" onclick="switchTab('Order')">
@@ -626,94 +671,14 @@ function round2(n) {
 // productsBySegment: { Segment: ['Product Name', ...] }
 // productSizeMap:    { 'Product Name': size }
 // companiesList:     ['Company A', ...]
-// companySegments:   { 'Company A': ['Seg1', 'Seg2'] }
+// companySegments:        { 'Company A': ['Seg1', 'Seg2'] }
+// companySegmentProducts: { 'Company A': { 'Seg1': ['Prod1','Prod2'] } }
 let productsBySegment = {};
 let productSizeMap    = {};
 let allProducts        = [];
-let companiesList      = [];
-let companySegments    = {};  // company → segments available
-// ── Static client list — instant fallback, always available ──────────────────
-const STATIC_CLIENTS = ["A l A Enterprises, Purbi, Mednipur", "AK TRADERS AURANGABAD", "ALFARHAN & SONS STORE, SHAHGANJ", "ALI TRADERS SIWAN", "AMAN AGENT & TRADERS (Palwal)", "AMBER AGENCIES KANPUR", "AMIT TRADERS BURHANPUR", "ANIL AGENCY SATNA", "ASHUTOSH ENTERPRISES MEERUT", "Aamantran ( JAMMU )", "Aamjn Business Corporation", "Abhinandan Traders Jalgaon", "Ajay Stores, Gandhinagar", "Akshay Purohit Nath Dwara", "Amjan Business Corporation, Dhampur", "Anil Trading Nanded", "Ankur Cold Drinks and Confectionery", "Annapurna Distribution House RAJPUR", "Annapurna Marketing, Raxaul", "Ashok Agency AURANGABAD", "BAFNA TRADERS BASMAT", "BAHETI TRADING CO ISLAMPUR", "Balaji Traders KOTA", "BanaShankari Traders VIJAYPURA", "Bhagat Sales KHAIRTAL", "Bhagwan Sweet Stores Ajmer", "Brahmakshatriya Sales Banaskantha", "CHOCOLATE HOUSE SUJANGARH", "Chirag Trading chennai", "Choudhary Enterprises, Muzaffarnagar", "D MART NIPANIA", "DALIM STORES MURSHIDABAD", "DAWKII MARKETING PVT LTD AGARTALA", "DEEPAK AGENCIES CHITRAKOOT", "DEEPAK CONFECTIONERY AGRA", "DEV TRADERS UDAIPUR", "DROWPADI STORES JIBANTALA", "DURGA TRADING COMPANY MUZZAFARNAGAR", "Dawkii Marketing, Agartala", "Deep Agencies Nagpur", "Dewani Store Bareilly", "Flipkart Internet Private Limited", "Funtime Food", "GANESH FOOD AND CONFECTIONERY RAIGARH", "GAURAV ENTEPRISES JAIPUR", "GOPAL ENTERPRISES MODINAGAR", "GOPI SWEETS AKOLA", "GURUKRIPA CONFECTIONERY NASIK", "GURUNANAK CONFECTIONERY Pachora", "GYAN TRADERS JHALRAPATAN", "Ganesh Enterprises & Events Raigarh", "Garg Agencies ROORKEE", "Gaurav Enterprise, Hyderabad", "Gouri Enterprise Uttar Dinajpur", "Gulwani Enterprises", "Gunjan Enterprises, Vadodara", "H.R. TRADERS KANTH MORADABAD", "HARI OM  CONFECTIONARY BHILWADA", "HARI OM SWEETS NEEMUCH", "Haldi Ram Ghyasi Ram & Sons  Bharatpur", "Hameed Enterprises Belagavi", "Hamja Traders Rahuri", "Hamja Traders, Rahuri", "Harish Trading Company", "Harshit Enterprises Bihar", "Harshit Trading Company, Pokran", "JAI BABA SALES RAIPUR", "JAI MARKETING KHANDWA", "JAIN TRADERS BARNALA", "JAISWAL TRADERS KISHANGANJ", "JAY AMBE TRADERS BHAVNAGAR", "JINDAL CONFECTIONERY KAITHAL", "JOY SANTOSHI CONFECTIONERY POROLDA", "Jain Confectionary, Jhalawar", "Jain Confectionery, Jhalawar, RJ", "Janta Sweets Jamnagar", "Jayalakshmi Trader, Solapur", "Jeetu Trading Company", "KAPUR CONFECTIONERS DELHI", "KASOUDHAN AGENCY GHAZIPUR", "KAUSHAL MARKETING (Guwahati)", "KBL ENTERPRISES RAXAUL", "KDR Marketing Guwahati", "KESHAV STORE GULAB BAG", "KISHAN GOLI WALA KOTA", "KISHORE AGENCY JABALPUR", "KOMAL TRADERS FARRUKHABAD", "KRISHNA AGENCY RISHIKESH", "KRISHNA ENTERPRISES, DAWA BAZAR INDORE", "KUSH KUMAR & COMPANY BARAN", "Kailas Stores Malegaon", "Kailash Chandra Goyal", "Kailashpati Enterprises, Gwalior", "Kamla Toffee Supliers MAKRANA", "Kanha-g Food, Ranchi", "Kavya Traders BASTI", "Komal Enterprises Indore", "Krishna Marketing ,Bulandshahr", "Krishna Traders , Sikar", "LACHIT AGENCY JORHAT", "LAVESH DHARMANI DEOLI", "LAXMI CONFECTIONERY Rae Bareli", "LOVE TRADING JHANSI", "Laxmi Narayan Agency, Siyanganj, Indore", "M.R. Traders Barnala", "M/S CHOCOLATE HOUSE JALORE", "M/s SATNAM AGENCY KARAULI RAJESTHAN", "M/s Sanskrit Sales Corporation, Kanpur", "MAA KALI ENTERPRISES, MEDINIPUR", "MADHUR TRADERS ULHASNAGAR", "MAHADEV BISCUITS GORAKHPUR", "MAMTA ENTERPRISES VARANASI", "MANOJ KUMAR AAGRA", "MANZOOR And COMPANY (Srinagar)", "MEGHDOOT AGENCIES BHOPAL", "MOHIT CONFECTIONARY CHITTORGARH", "MUKESH TRADERS PATNA", "Mahavir Traders Barnala", "Mahesh Trading, Dahod", "Mangla Agency AMBIKAPUR", "Meerut Chocolate Company", "Mehraj Milk Supply ANANTNAG", "Mehraj Milk Supply NAI BASTI", "Mohit Confectionery Store Tohana", "Mohit Enterprises KUSHALGARH DBTRS", "Ms Enterprise SUNDANGARH", "NAKODA CHOCOLATE HUBLI", "NANAK STORES BHOPAL", "NAYYAR TRADING CO. LUDHIYANA", "NEW AKASH SWEETS NANDURA", "NEW OM SWEETS (AMALNER)", "NITU ENTERPRISES", "New Prince Stores Dhar", "OM GENERAL STORES MORADABAD", "OM MARKETING RAJKOT", "OM SATYA SAI AGENCIES RAJAHMUNDRY", "OM TRADERS , PRATAPGARH", "Om Sai Enterprises, Amreli", "Om Sai Traders Bnada", "Om Shri Traders ITARSI", "PIPADA TRADERS NIMBHERA", "PRAGATI TRADERS, BALAGHAT", "PRANAT TRADERS PACHORE", "PRITAM ENTERPRICES GWALIOR", "PRIYA STORE DHOLPUR", "Paresh Trader, Surendranagar", "Paresh Traders Surendranagar", "Pawan Agritech", "Poona Sweet Products Jodhpur", "Prakash Kumar Sawaldas Bina", "Prakash Traders KHANDWA", "Prakash Traders, Pune", "Pratap Rai and Sons Private Limited Bareilly", "Pratap Rai and Sons Private Limited Lucknow", "Pratiksha Sales Agency, Thandla", "Pravin Store Junagadh", "Premalaya SSILIGURI", "Priya Confectionery, Dhanbad", "Punit Maheshwari Nathdvara", "R.M.TRADING CO. KANPUR", "RADHIKA ENTERPRISES SUNDARGARH", "RAJ SWEETS UJJAIN", "RAJA ENTERPRISES Ratlam", "RAJAL ENTERPRISE BHUJ KUTCH", "RAJDEEP SALES & MARKETING JAGATDAL", "RAJESH SANWALDAS KARIRA", "REJA STORES MALDA", "ROSHAN ENTERPRISES NARAYAN GOAN", "ROYAL CONFECTIONERY, SAHARANPUR", "RUSHABH TRADING SURENDRANAGAR", "Radhika Confectonary Bilaspur", "Radhika Enterprises, Sundargarh", "Rajasthan Choclate House MADHURAI", "Rajendra Kumar Ashish Kumar Tonk", "Ramesh Enterprises, Sri Ganganagar", "Ramesh Kumar and Sons AMRITSAR", "Ranganata Enterprises, Bengaluru", "Ratn Raj Collection & Concessionary MANAWARa", "Rayon Systems Banglore", "Ritesh Traders RAJGARH DHAR", "Rohit Agencies Gondia", "Roshantaj Enterprises Hindupur", "Roshantaj Enterprises, Rahuri", "S.P. TRADERS BAREILLY", "S.P. TRADING COMPANY KARNAL", "SADIKUL SEKH (MURSHIDABAD)", "SAIBABA AGENCY AHMEDABADD", "SANJAY TRADERS Khandwa", "SANJAY TRAVELS", "SANMATI KIRANA STORE PACHORE", "SATNAM AGENCY KARAULI", "SHAN ENTERPRISES GONDA", "SHIVAM TRADERS CHANDAUSI", "SHOAIB STORES ' Malda'", "SHREE AGENCIES MANDSAUR", "SHREE KHATU SHYAM ENTERPRISES ( KAITHAL)", "SHREE NARAYAN AGENCY KOLKATA", "SHREE SAI DISTRIBUTION Pune", "SHREE SHYAM TRADERS DHOLPUR", "SHREE VAISHNO TRADERS AMBALA", "SHRI BALAJI UDHYOGS (GORAKHPUR)", "SHRI KAILASH STORES AHMEDNAGAR", "SHRI NARMADA CONFECTIONARY HARDA", "SHRI NIRMAL SALES AHMEDNAGAR", "SHRi RADHA KRISHAN MARKETING SHEOPUR", "SHUBH LABH ENTERPRISES( Ramganjmandi)", "SIDRA TRADERS INDORE", "SINGLA SALES AGENCY HANSI", "SRI GANESH SWEET STORES DHULIA", "SUNIL TRADERS , BANSWARA", "SURIA DISTRIBUTOR MALDA", "SUSHMA TRADERS JAIPUR", "Sahil Trades DELHI", "Sahu Traders RAIRANGPUR", "Sai Baba Enterprises Lucknow", "Sai Candies & Toffees Ulhasnagar", "Satguru Traders Jodhpur", "Satyam  Goli  Bhandar Hingoli", "Sehat packers & suppliers, Raigarh", "Shailendra Trading Co. MORADABAD", "Shashi Traders Belagavi", "Shiv Guru Traders Gaya", "Shivaji Sales Palia Kalan", "Shree Manglam Enterprises Sasram", "Shree Om Traders , GAYA", "Shree Pharma Wardha", "Shree Shakti Traders, Fatehpur", "Shree Shyam Enterprises Hazaribag", "Shri Paras Agencies HATHRAS", "Shriniwas goli bhandar, Yawatmal", "Solitaire Impex General Trading Company", "Sudha Sales Kanpur", "Swati Foods, Vikasnagar", "Sweetworld Foods India Pvt. Ltd.", "THE ROYAL CONFECTIONERS INDORE", "THE SUN MARKETING ALLIANCE HAPUR", "TISKA FOOD INTERNATIONAL", "Tarun & Company, Parwanoo, HP", "Thangam Traders Chennai", "Tirthankar-24 Private Limited DHAR", "UNITED ENTERPRISES INDORE", "URP - FLIPKART & MEESHO", "Umraw Trading Company Hyderabad", "Universal Consumer Care NANDURA", "VAISHNO FOOD PRODUCTS AGRA", "VARDHMAN ENTERPRISES PUNE", "VEERA ENTERPRISE VAPI", "VENYA ENTERPRISES KANPUR", "VIJAY STORE Timarni", "VISHAL AGENCIES Bhopal", "Vadika Agency, Janjgir Champa, CG", "Variety confectionery RATLAM", "Vedika Agency", "Vinayak Enterprises GHAZIABAD", "Vishal Traders  Dhanbad", "Vishnu Traders, Khilchipur", "Wahoo Product KOLKATA", "YUVRAJ AGENCY BALLIA", "Yachana Enterprises SURAT", "Yash Agencies Latur", "Yes Trading Corporation Kalaburagi", "Yogesh Agency, Bikaner", "ZUBAIR TRADING CO. ANANTNAG"];
-
-let allClients = [...STATIC_CLIENTS]; // immediately available
-
-async function fetchClients() {
-  // Static list is already loaded — dropdown works instantly.
-  // Attempt live GAS fetch in background; silently updates allClients if newer data comes in.
-  try {
-    const ctrl = new AbortController();
-    setTimeout(() => ctrl.abort(), 10000); // 10-second timeout
-    const resp = await fetch(WEB_APP_URL + '?action=getClients', { signal: ctrl.signal });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (Array.isArray(data) && data.length) {
-        allClients = data; // live update — new/inactive clients reflected immediately
-        console.log('✅ Live client list loaded:', allClients.length, 'clients');
-        return;
-      }
-      if (data.error) console.warn('GAS getClients error:', data.error);
-    }
-  } catch(e) {
-    if (e.name !== 'AbortError') console.warn('GAS fetchClients failed (using static list):', e);
-  }
-  // Static list remains active — no toast, no disruption
-}
-
-function setupPartyCombo() {
-  const inp  = document.getElementById('txtParty');
-  const drop = document.getElementById('partyDropdown');
-  let activeIdx = -1;
-
-  function positionDrop() {
-    const rect = inp.getBoundingClientRect();
-    drop.style.top   = (rect.bottom + 2) + 'px';
-    drop.style.left  = rect.left + 'px';
-    drop.style.width = rect.width + 'px';
-  }
-
-  inp.addEventListener('input', () => {
-    updateSubmitScreen();
-    renderItemCards();
-    const q = inp.value.trim().toLowerCase();
-    if (!q || !allClients.length) { drop.classList.remove('open'); return; }
-    const filtered = allClients.filter(c => c.toLowerCase().includes(q)).slice(0, 25);
-    if (!filtered.length) { drop.classList.remove('open'); return; }
-    activeIdx = -1;
-    drop.innerHTML = filtered.map((c, i) =>
-      `<div class="party-option" data-val="${c.replace(/"/g,'&quot;')}" data-idx="${i}">${c}</div>`
-    ).join('');
-    positionDrop();
-    drop.classList.add('open');
-    drop.querySelectorAll('.party-option').forEach(el => {
-      el.addEventListener('mousedown', ev => {
-        ev.preventDefault();
-        inp.value = el.dataset.val;
-        drop.classList.remove('open');
-        updateSubmitScreen();
-        renderItemCards();
-      });
-    });
-  });
-
-  inp.addEventListener('keydown', e => {
-    const opts = drop.querySelectorAll('.party-option');
-    if (!drop.classList.contains('open') || !opts.length) return;
-    if (e.key === 'ArrowDown') { activeIdx = Math.min(activeIdx + 1, opts.length - 1); e.preventDefault(); }
-    else if (e.key === 'ArrowUp') { activeIdx = Math.max(activeIdx - 1, 0); e.preventDefault(); }
-    else if (e.key === 'Enter' && activeIdx >= 0) {
-      inp.value = opts[activeIdx].dataset.val;
-      drop.classList.remove('open');
-      updateSubmitScreen(); renderItemCards();
-      e.preventDefault();
-    } else if (e.key === 'Escape') { drop.classList.remove('open'); }
-    opts.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
-    if (activeIdx >= 0) opts[activeIdx].scrollIntoView({ block: 'nearest' });
-  });
-
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.party-combo-wrap')) drop.classList.remove('open');
-  });
-}
+let companiesList           = [];
+let companySegments         = {};  // company → Set of segments
+let companySegmentProducts  = {};  // company → { segment → [products] }
 
 async function fetchProducts() {
   const sub = document.getElementById('greetingSubtitle');
@@ -745,10 +710,12 @@ function rebuildProductIndex() {
   // Always show all products — no market filtering
   const filtered = allProducts;
 
-  productsBySegment = {};
-  productSizeMap    = {};
-  companySegments   = {};
-  companiesList     = [];
+  productsBySegment       = {};
+  productSizeMap          = {};
+  companySegments         = {};
+  companySegmentProducts  = {};
+  companiesList           = [];
+  productRateMap          = {};
 
   filtered.forEach(row => {
     const seg     = (row.segment  || '').trim();
@@ -762,10 +729,17 @@ function rebuildProductIndex() {
     productsBySegment[seg].push(prod);
     productSizeMap[prod] = size;
 
-    // company → segments map
+    // company → segments map + company → segment → products map
+    // rate map
+    const rate = Number(row.rate) || 0;
+    if (rate > 0) productRateMap[prod] = rate;
+
     if (company) {
       if (!companySegments[company]) companySegments[company] = new Set();
       companySegments[company].add(seg);
+      if (!companySegmentProducts[company]) companySegmentProducts[company] = {};
+      if (!companySegmentProducts[company][seg]) companySegmentProducts[company][seg] = [];
+      companySegmentProducts[company][seg].push(prod);
     }
   });
 
@@ -926,11 +900,15 @@ function detectSegment(name) {
 function updateProductDatalist(segment) {
   const dl = document.getElementById('productList');
   dl.innerHTML = '';
-  if (segment && productsBySegment[segment]) {
-    productsBySegment[segment].forEach(p => {
-      const o = document.createElement('option'); o.value = p; dl.appendChild(o);
-    });
-  }
+  if (!segment) return;
+  const company = (document.getElementById('cmbCompany') || {}).value || '';
+  // If company selected, show only that company's products for this segment
+  const prods = (company && companySegmentProducts[company] && companySegmentProducts[company][segment])
+    ? companySegmentProducts[company][segment]
+    : (productsBySegment[segment] || []);
+  prods.forEach(p => {
+    const o = document.createElement('option'); o.value = p; dl.appendChild(o);
+  });
 }
 function onSegmentChange() {
   const seg = document.getElementById('cmbSegment').value;
@@ -951,6 +929,10 @@ function onProductInput() {
   // Extract size from lookup map (sheet value), fallback to regex
   const size = getSizeForProduct(prod);
   document.getElementById('txtSize').value = size || '';
+  // Auto-fill rate from productRateMap
+  if (productRateMap[prod]) {
+    document.getElementById('txtRate').value = productRateMap[prod];
+  }
   calcAmount();
 }
 
@@ -981,6 +963,7 @@ function getFormItem() {
   // Only % discount is saved to Discount column. ₹ and +N types → blank
   const discForSheet = discType === '%' ? disc : 0;
   return {
+    company:  document.getElementById('cmbCompany').value.trim(),
     seg:      document.getElementById('cmbSegment').value.trim(),
     prod:     document.getElementById('txtProduct').value.trim(),
     unit:     document.getElementById('cmbUnit').value.trim(),
@@ -1036,6 +1019,10 @@ function deleteItem(index) {
 function editItem(index) {
   selectedIndex = index;
   const item = items[index];
+  if (item.company) {
+    document.getElementById('cmbCompany').value = item.company;
+    _populateSegmentByCompany(item.company);
+  }
   document.getElementById('cmbSegment').value = item.seg;
   updateProductDatalist(item.seg);
   setTimeout(() => {
@@ -1241,7 +1228,7 @@ function applyLoadedOrder(data, orderNo) {
     const discType = it.discType || '%';
     const disc = Number(it.disc) || 0;
     return {
-      seg: it.seg || '', prod: it.prod || '', unit: it.unit || '',
+      company: it.company || '', seg: it.seg || '', prod: it.prod || '', unit: it.unit || '',
       qty, rate, size, discType, disc, remarks: it.remarks || '',
       amount: Number(it.amount) || computeAmount(rate, qty, size, discType, disc)
     };
@@ -1303,6 +1290,7 @@ async function saveOrder() {
     if (result.startsWith('ERROR')) throw new Error(result.replace('ERROR: ',''));
     const orderNo = isEdit ? editingOrderNo : result.trim();
     showToast(isEdit ? `✅ Order ${orderNo} updated!` : `✅ Order ${orderNo} saved!`, 'success');
+    alert(isEdit ? `🎉 Order ${orderNo} updated successfully!` : `🎉 Order ${orderNo} saved successfully!`);
     clearForm(true);
     switchTab('Order');
   } catch (err) {
@@ -1373,6 +1361,210 @@ function showToast(msg, type = 'info') {
   toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
 }
 
+// ── Product Rate Map (auto-filled from GAS) ───────────────────────────────────
+let productRateMap = {}; // { 'Product Name': rate }
+
+// ── Live clients from GAS (reads Client List sheet directly) ─────────────────
+let allClients = [];
+
+async function fetchClients() {
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 12000);
+    const resp = await fetch(WEB_APP_URL + '?action=getClients', { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (Array.isArray(data) && data.length > 0) {
+      allClients = data;
+      showToast('✅ ' + data.length + ' clients loaded from sheet', 'success');
+    } else if (data && data.error) {
+      showToast('⚠️ Clients: ' + data.error, 'error');
+    }
+  } catch (err) {
+    showToast('⚠️ Could not load client list: ' + err.message, 'error');
+  }
+}
+
+// ── Party combobox ─────────────────────────────────────────────────────────────
+function setupPartyCombo() {
+  const inp  = document.getElementById('txtParty');
+  const drop = document.getElementById('partyDrop');
+  let activeIdx = -1;
+  let dropVisible = false;
+
+  function positionDrop() {
+    const r = inp.getBoundingClientRect();
+    drop.style.left   = r.left + 'px';
+    drop.style.top    = (r.bottom + 2) + 'px';
+    drop.style.width  = r.width + 'px';
+  }
+
+  function showDrop(list) {
+    if (!list.length) { hideDrop(); return; }
+    activeIdx = -1;
+    drop.innerHTML = '';
+    list.slice(0, 60).forEach((name, i) => {
+      const d = document.createElement('div');
+      d.className = 'party-opt';
+      d.textContent = name;
+      d.addEventListener('mousedown', e => {
+        e.preventDefault();
+        inp.value = name;
+        hideDrop();
+        updateSubmitScreen();
+        renderItemCards();
+      });
+      drop.appendChild(d);
+    });
+    positionDrop();
+    drop.classList.add('open');
+    dropVisible = true;
+  }
+
+  function hideDrop() {
+    drop.classList.remove('open');
+    dropVisible = false;
+    activeIdx = -1;
+  }
+
+  inp.addEventListener('input', () => {
+    const q = inp.value.trim().toLowerCase();
+    updateSubmitScreen();
+    renderItemCards();
+    if (!q) { showDrop(allClients.slice(0, 40)); return; }
+    const hits = allClients.filter(c => c.toLowerCase().includes(q));
+    showDrop(hits);
+  });
+
+  inp.addEventListener('focus', () => {
+    const q = inp.value.trim().toLowerCase();
+    const hits = q ? allClients.filter(c => c.toLowerCase().includes(q)) : allClients.slice(0, 40);
+    showDrop(hits);
+  });
+
+  inp.addEventListener('blur', () => {
+    setTimeout(hideDrop, 180);
+  });
+
+  inp.addEventListener('keydown', e => {
+    const opts = drop.querySelectorAll('.party-opt');
+    if (!dropVisible || !opts.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIdx = Math.min(activeIdx + 1, opts.length - 1);
+      opts.forEach((o, i) => o.classList.toggle('active', i === activeIdx));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIdx = Math.max(activeIdx - 1, 0);
+      opts.forEach((o, i) => o.classList.toggle('active', i === activeIdx));
+    } else if (e.key === 'Enter' && activeIdx >= 0) {
+      e.preventDefault();
+      inp.value = opts[activeIdx].textContent;
+      hideDrop();
+      updateSubmitScreen();
+      renderItemCards();
+    } else if (e.key === 'Escape') {
+      hideDrop();
+    }
+  });
+
+  window.addEventListener('scroll', () => { if (dropVisible) positionDrop(); }, true);
+  window.addEventListener('resize', () => { if (dropVisible) positionDrop(); });
+}
+
+// ── Paste Items ───────────────────────────────────────────────────────────────
+function openPasteModal() {
+  document.getElementById('pasteTextarea').value = '';
+  document.getElementById('pastePreview').innerHTML = '';
+  document.getElementById('pasteModal').classList.add('open');
+  setTimeout(() => document.getElementById('pasteTextarea').focus(), 100);
+}
+
+// Phonetic normalisation for fuzzy matching
+function normalizeProd(s) {
+  return s.toLowerCase()
+    .replace(/stoberry|strawbery|strawberry/g, 'straw')
+    .replace(/\bemli\b|\bimli\b/g, 'imli')
+    .replace(/tedy|teddy/g, 'teddy')
+    .replace(/\bchoco\b/g, 'chocolate')
+    .replace(/\bcr\b|\bctn\b|\bcarton\b/g, '')
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+function fuzzyMatchProduct(query) {
+  const q = normalizeProd(query);
+  const qWords = q.split(' ').filter(Boolean);
+  let best = null, bestScore = 0;
+  allProducts.forEach(row => {
+    const name = row.product || '';
+    const n = normalizeProd(name);
+    // Count how many query words appear in product name
+    const matched = qWords.filter(w => n.includes(w)).length;
+    const score = matched / Math.max(qWords.length, 1);
+    if (score > bestScore || (score === bestScore && name.length < (best ? best.name.length : 999))) {
+      bestScore = score;
+      best = row;
+    }
+  });
+  return bestScore >= 0.5 ? best : null;
+}
+
+let _parsedPasteItems = [];
+
+document.addEventListener('input', function(e) {
+  if (e.target.id !== 'pasteTextarea') return;
+  const lines = e.target.value.split('\n').filter(l => l.trim());
+  const preview = document.getElementById('pastePreview');
+  _parsedPasteItems = [];
+  if (!lines.length) { preview.innerHTML = ''; return; }
+
+  let html = '<div style="font-size:12px; line-height:1.8;">';
+  lines.forEach(line => {
+    const m = line.trim().match(/^(\d+)\s*cr\s+(.+)$/i);
+    if (!m) {
+      html += `<div class="paste-row-err">❌ ${line} — bad format (need: 5 cr product)</div>`;
+      return;
+    }
+    const qty   = parseInt(m[1]);
+    const qProd = m[2].trim();
+    const match = fuzzyMatchProduct(qProd);
+    if (!match) {
+      html += `<div class="paste-row-warn">⚠️ ${qty} cr ${qProd} — no match</div>`;
+      _parsedPasteItems.push(null);
+      return;
+    }
+    const rate = productRateMap[match.product] || 0;
+    html += `<div class="paste-row-ok">✅ ${qty} cr → ${match.product}${rate ? ' @ ₹'+rate : ''}</div>`;
+    _parsedPasteItems.push({ qty, match, rate });
+  });
+  html += '</div>';
+  preview.innerHTML = html;
+});
+
+function confirmPasteItems() {
+  const lines = document.getElementById('pasteTextarea').value.split('\n').filter(l => l.trim());
+  let added = 0, skipped = 0;
+  lines.forEach((line, i) => {
+    const parsed = _parsedPasteItems[i];
+    if (!parsed) { skipped++; return; }
+    const { qty, match, rate } = parsed;
+    const seg  = match.segment || '';
+    const prod = match.product || '';
+    const size = Number(match.size) || 1;
+    const unit = extractUnit(prod) || 'PCS';
+    const co   = match.company  || '';
+    const amount = computeAmount(rate, qty, size, '%', 0);
+    items.push({ company: co, seg, prod, unit, qty, rate, size, discType:'%', disc:0, remarks:'', amount });
+    added++;
+  });
+  document.getElementById('pasteModal').classList.remove('open');
+  updateAll();
+  if (added)   showToast(`✅ ${added} item${added>1?'s':''} added`, 'success');
+  if (skipped) showToast(`⚠️ ${skipped} line${skipped>1?'s':''} skipped (no match)`, 'info');
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 window.onload = function() {
   document.getElementById('txtDate').value = new Date().toISOString().split('T')[0];
@@ -1381,125 +1573,9 @@ window.onload = function() {
   document.getElementById('txtProduct').addEventListener('change', onProductInput);
   document.getElementById('app').classList.add('customer-mode');
   setupPartyCombo();
-  fetchClients();
   fetchProducts();
+  fetchClients();
 };
-
-// ── Paste Items Modal ─────────────────────────────────────────────────────────
-function openPasteModal() {
-  const party = document.getElementById('txtParty').value.trim();
-  if (!party) { showToast('❌ Enter Party Name first', 'error'); return; }
-  document.getElementById('pasteModal').style.display = 'flex';
-  document.getElementById('pasteTxt').focus();
-}
-function closePasteModal() {
-  document.getElementById('pasteModal').style.display = 'none';
-  document.getElementById('pasteTxt').value = '';
-  document.getElementById('pastePreview').innerHTML = '';
-}
-
-function fuzzyMatchProduct(query) {
-  // Normalize: lowercase, remove special chars
-  const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
-  // Common phonetic replacements for user's typing patterns
-  const phone = s => s
-    .replace(/stoberry/g,'strawberry').replace(/emli/g,'imli').replace(/endy/g,'andy')
-    .replace(/tedy/g,'teddy').replace(/donet/g,'donut').replace(/monky/g,'monkey')
-    .replace(/monstar/g,'monster').replace(/frugy/g,'fruity').replace(/fruzy/g,'fruity')
-    .replace(/sorse/g,'source').replace(/cutti/g,'chhoti').replace(/jelly/g,'jelly')
-    .replace(/biggy/g,'biggy').replace(/zinga/g,'zinga').replace(/wafer/g,'wafer')
-    .replace(/choky/g,'choco').replace(/contenar/g,'container').replace(/wali/g,'')
-    .replace(/pic$/g,'').replace(/\d+\s*pic/g,'').replace(/\s+/g,' ').trim();
-
-  const q = phone(norm(query));
-  const qWords = q.split(' ').filter(Boolean);
-
-  let best = null, bestScore = -1;
-
-  // Search all products across all segments
-  Object.entries(productsBySegment).forEach(([seg, prods]) => {
-    prods.forEach(prod => {
-      const p = phone(norm(prod));
-      const pWords = p.split(' ').filter(Boolean);
-      // Count matching words (both directions)
-      let score = 0;
-      qWords.forEach(w => { if (w.length > 1 && p.includes(w)) score += 2; });
-      pWords.forEach(w => { if (w.length > 1 && q.includes(w)) score += 1; });
-      // Exact substring bonus
-      if (p.includes(q) || q.includes(p)) score += 5;
-      if (score > bestScore) { bestScore = score; best = { seg, prod }; }
-    });
-  });
-  return bestScore > 0 ? best : null;
-}
-
-function parsePasteLines() {
-  const lines = document.getElementById('pasteTxt').value.split('\n');
-  const preview = document.getElementById('pastePreview');
-  preview.innerHTML = '';
-  const parsed = [];
-
-  lines.forEach((line, i) => {
-    line = line.trim();
-    if (!line) return;
-    // Format: {qty} cr {product name...}
-    const m = line.match(/^(\d+)\s+cr\s+(.+)$/i);
-    if (!m) {
-      preview.innerHTML += `<div style="color:#ef4444;padding:2px 0;font-size:12px;">❌ Line ${i+1}: Can't parse — "${line}"</div>`;
-      return;
-    }
-    const qty = parseInt(m[1]);
-    const rawName = m[2].trim();
-    const match = fuzzyMatchProduct(rawName);
-    if (!match) {
-      preview.innerHTML += `<div style="color:#f59e0b;padding:2px 0;font-size:12px;">⚠️ No match: <b>${rawName}</b></div>`;
-      return;
-    }
-    const size = productSizeMap[match.prod] || 1;
-    parsed.push({ qty, rawName, seg: match.seg, prod: match.prod, size });
-    preview.innerHTML += `<div style="color:#22c55e;padding:2px 0;font-size:12px;">✅ ${qty} cr → <b>${match.prod}</b> <span style="color:#94a3b8">(${match.seg})</span></div>`;
-  });
-
-  preview._parsed = parsed;
-  if (parsed.length > 0) {
-    document.getElementById('pasteAddBtn').disabled = false;
-    document.getElementById('pasteAddBtn').textContent = `➕ Add ${parsed.length} Items`;
-  } else {
-    document.getElementById('pasteAddBtn').disabled = true;
-    document.getElementById('pasteAddBtn').textContent = 'Add Items';
-  }
-}
-
-function confirmPasteItems() {
-  const parsed = document.getElementById('pastePreview')._parsed || [];
-  if (!parsed.length) return;
-  parsed.forEach(p => {
-    items.push({
-      seg: p.seg, prod: p.prod, unit: 'Ctn',
-      qty: p.qty, rate: 0, size: p.size,
-      discType: '%', disc: 0, remarks: '', amount: 0
-    });
-  });
-  updateAll();
-  closePasteModal();
-  showToast(`✅ ${parsed.length} items added! Set rates in item list.`, 'success');
-  switchTab('Items');
-}
 </script>
-
-<!-- Paste Items Modal -->
-<div id="pasteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;padding:20px;max-height:90vh;overflow-y:auto;">
-    <div style="font-weight:700;font-size:16px;margin-bottom:12px;">📋 Paste Order Items</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Format: <code>5 cr product name</code> — one per line</div>
-    <textarea id="pasteTxt" rows="10" style="width:100%;border:1.5px solid #c7d2fe;border-radius:8px;padding:10px;font-size:13px;resize:vertical;box-sizing:border-box;" placeholder="10 cr milky 1 wali&#10;5 cr rose 1 wali&#10;..."></textarea>
-    <button onclick="parsePasteLines()" style="margin-top:8px;width:100%;padding:10px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">🔍 Preview Match</button>
-    <div id="pastePreview" style="margin-top:10px;max-height:200px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:12px;"></div>
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <button id="pasteAddBtn" onclick="confirmPasteItems()" disabled style="flex:1;padding:11px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Add Items</button>
-      <button onclick="closePasteModal()" style="flex:1;padding:11px;background:#f1f5f9;color:#334155;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">Cancel</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
