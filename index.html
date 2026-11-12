@@ -352,6 +352,9 @@
   .mode-btn.office   { background: rgba(255,255,255,0.9); color: #6366f1; }
   /* ── Customer mode: hide all price-sensitive elements ── */
   #app.customer-mode .price-sensitive { display: none !important; }
+  /* ── Office mode: always show price fields expanded ── */
+  #app:not(.customer-mode) #priceFields { display: block !important; }
+  #app:not(.customer-mode) #priceToggleBtn { display: none !important; }
   /* Home screen greeting */
   .greeting-card {
     background: linear-gradient(135deg, #eef2ff, #f0fdf4);
@@ -873,8 +876,8 @@ function calcAmount() {
   const size     = parseInt(document.getElementById('txtSize').value) || 0;
   const discType = document.getElementById('cmbDiscType').value;
   const disc     = parseNum(document.getElementById('txtDiscount').value);
-  if (rate > 0 && qty > 0 && size > 0) {
-    document.getElementById('txtAmount').value = '₹' + computeAmount(rate, qty, size, discType, disc).toFixed(2);
+  if (rate > 0 && qty > 0) {
+    document.getElementById('txtAmount').value = '₹' + computeAmount(rate, qty, size || 1, discType, disc).toFixed(2);
   } else {
     document.getElementById('txtAmount').value = '';
   }
@@ -930,9 +933,16 @@ function onProductInput() {
   // Extract size from lookup map (sheet value), fallback to regex
   const size = getSizeForProduct(prod);
   document.getElementById('txtSize').value = size || '';
-  // Auto-fill rate from productRateMap
-  if (productRateMap[prod]) {
-    document.getElementById('txtRate').value = productRateMap[prod];
+  // Auto-fill rate & discount — client-wise first (only if rate > 0), else product default
+  const cr   = clientRateMap[prod];
+  const rate = (cr && cr.rate > 0) ? cr.rate
+             : (productRateMap[prod] || defaultRateMap[prod] || 0);
+
+  if (rate > 0) document.getElementById('txtRate').value = rate;
+  if (cr && cr.disc > 0) {
+    document.getElementById('cmbDiscType').value = '%';
+    document.getElementById('txtDiscount').value  = cr.disc;
+    onDiscTypeChange();
   }
   calcAmount();
 }
@@ -1365,6 +1375,48 @@ function showToast(msg, type = 'info') {
 // ── Product Rate Map (auto-filled from GAS) ───────────────────────────────────
 let productRateMap = {}; // { 'Product Name': rate }
 
+// ── Client-wise Rate Map ───────────────────────────────────────────────────────
+let allClientRates  = []; // [{ name, product, rate, disc }]
+let clientRateMap   = {}; // { 'Product Name': { rate, disc } } — built per selected party
+let defaultRateMap  = {}; // { 'Product Name': rate } — first non-zero rate across all clients
+
+function buildClientRateMap(party) {
+  clientRateMap = {};
+  if (!party) return;
+  const p = party.trim().toLowerCase();
+  allClientRates.forEach(r => {
+    if (r.name.toLowerCase() === p && r.product) {
+      clientRateMap[r.product] = { rate: r.rate, disc: r.disc };
+    }
+  });
+}
+
+function buildDefaultRateMap() {
+  defaultRateMap = {};
+  allClientRates.forEach(r => {
+    if (r.product && r.rate > 0 && !defaultRateMap[r.product]) {
+      defaultRateMap[r.product] = r.rate;
+    }
+  });
+}
+
+async function fetchClientRates() {
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 15000);
+    const resp = await fetch(WEB_APP_URL + '?action=getClientRates', { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (Array.isArray(data)) {
+      allClientRates = data;
+      buildDefaultRateMap();
+    }
+  } catch (err) {
+    console.warn('Could not load client rates:', err.message);
+  }
+}
+
 // ── Live clients from GAS (reads Client List sheet directly) ─────────────────
 let allClients = [];
 
@@ -1413,6 +1465,7 @@ function setupPartyCombo() {
         e.preventDefault();
         inp.value = name;
         hideDrop();
+        buildClientRateMap(name);
         updateSubmitScreen();
         renderItemCards();
       });
@@ -1445,7 +1498,7 @@ function setupPartyCombo() {
   });
 
   inp.addEventListener('blur', () => {
-    setTimeout(hideDrop, 180);
+    setTimeout(() => { hideDrop(); buildClientRateMap(inp.value.trim()); }, 180);
   });
 
   inp.addEventListener('keydown', e => {
@@ -1463,6 +1516,7 @@ function setupPartyCombo() {
       e.preventDefault();
       inp.value = opts[activeIdx].textContent;
       hideDrop();
+      buildClientRateMap(inp.value);
       updateSubmitScreen();
       renderItemCards();
     } else if (e.key === 'Escape') {
@@ -1544,9 +1598,12 @@ document.addEventListener('input', function(e) {
       _parsedPasteItems.push(null);
       return;
     }
-    const rate = productRateMap[match.product] || 0;
-    html += `<div class="paste-row-ok">✅ ${match.product} × ${qty}${rate ? ' @ ₹'+rate : ''}</div>`;
-    _parsedPasteItems.push({ qty, match, rate });
+    const cr   = clientRateMap[match.product];
+    const rate = (cr && cr.rate > 0) ? cr.rate
+               : (productRateMap[match.product] || defaultRateMap[match.product] || 0);
+    const disc = (cr && cr.disc > 0) ? cr.disc : 0;
+    html += `<div class="paste-row-ok">✅ ${match.product} × ${qty}${rate ? ' @ ₹'+rate : ''}${disc ? ' disc '+disc+'%' : ''}</div>`;
+    _parsedPasteItems.push({ qty, match, rate, disc });
   });
   html += '</div>';
   preview.innerHTML = html;
@@ -1558,14 +1615,14 @@ function confirmPasteItems() {
   lines.forEach((line, i) => {
     const parsed = _parsedPasteItems[i];
     if (!parsed) { skipped++; return; }
-    const { qty, match, rate } = parsed;
+    const { qty, match, rate, disc } = parsed;
     const seg  = match.segment || '';
     const prod = match.product || '';
     const size = Number(match.size) || 1;
     const unit = extractUnit(prod) || 'PCS';
     const co   = match.company  || '';
-    const amount = computeAmount(rate, qty, size, '%', 0);
-    items.push({ company: co, seg, prod, unit, qty, rate, size, discType:'%', disc:0, remarks:'', amount });
+    const amount = computeAmount(rate, qty, size, '%', disc || 0);
+    items.push({ company: co, seg, prod, unit, qty, rate, size, discType:'%', disc: disc||0, remarks:'', amount });
     added++;
   });
   document.getElementById('pasteModal').classList.remove('open');
@@ -1584,6 +1641,7 @@ window.onload = function() {
   setupPartyCombo();
   fetchProducts();
   fetchClients();
+  fetchClientRates();
 };
 </script>
 </body>
