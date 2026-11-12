@@ -612,9 +612,9 @@
   <div class="modal-overlay" id="pasteModal">
     <div class="modal-sheet">
       <h3>📋 Paste Items</h3>
-      <p>One item per line: <b>{qty} cr {product name}</b><br>
-         e.g. <code>5 cr Milky Cube x48</code> or <code>10cr kings</code></p>
-      <textarea id="pasteTextarea" placeholder="5 cr Milky Cube x48&#10;3 cr Cremelol Cup&#10;8cr imli zinga"></textarea>
+      <p>One item per line — tab-separated: <b>Product Name &nbsp;[Tab]&nbsp; Qty</b><br>
+         e.g. <code>Milky Cube 250 pcs x16 Bucket	20</code></p>
+      <textarea id="pasteTextarea" placeholder="Jelly Guava 85 pcs x 40 box	10&#10;Milky Cube 250 pcs x 16 Bucket	20&#10;Mix Wafer 60 pcs x 28 box	30"></textarea>
       <div id="pastePreview"></div>
       <div class="action-row" style="margin-top:14px; gap:10px;">
         <button class="btn btn-success" onclick="confirmPasteItems()">✅ Add All Matched</button>
@@ -786,6 +786,7 @@ function _populateSegmentByCompany(company) {
 }
 
 function onCompanyChange() {
+  document.getElementById('cmbSegment').value = '';   // always reset segment
   _populateSegmentByCompany(document.getElementById('cmbCompany').value);
   document.getElementById('txtProduct').value = '';
   document.getElementById('productList').innerHTML = '';
@@ -1503,7 +1504,7 @@ function fuzzyMatchProduct(query) {
     // Count how many query words appear in product name
     const matched = qWords.filter(w => n.includes(w)).length;
     const score = matched / Math.max(qWords.length, 1);
-    if (score > bestScore || (score === bestScore && name.length < (best ? best.name.length : 999))) {
+    if (score > bestScore || (score === bestScore && name.length < (best ? (best.product||'').length : 999))) {
       bestScore = score;
       best = row;
     }
@@ -1522,21 +1523,29 @@ document.addEventListener('input', function(e) {
 
   let html = '<div style="font-size:12px; line-height:1.8;">';
   lines.forEach(line => {
-    const m = line.trim().match(/^(\d+)\s*cr\s+(.+)$/i);
-    if (!m) {
-      html += `<div class="paste-row-err">❌ ${line} — bad format (need: 5 cr product)</div>`;
+    // Parse tab-separated: "Product Name\tQty"
+    let qty, qProd;
+    const tabIdx = line.indexOf('\t');
+    if (tabIdx !== -1) {
+      qProd = line.substring(0, tabIdx).trim();
+      qty   = parseInt(line.substring(tabIdx + 1).trim());
+    } else {
+      // fallback: "qty cr product name"
+      const m = line.trim().match(/^(\d+)\s*cr\s+(.+)$/i);
+      if (m) { qty = parseInt(m[1]); qProd = m[2].trim(); }
+    }
+    if (!qProd || !qty || isNaN(qty)) {
+      html += `<div class="paste-row-err">❌ ${line} — bad format</div>`;
       return;
     }
-    const qty   = parseInt(m[1]);
-    const qProd = m[2].trim();
     const match = fuzzyMatchProduct(qProd);
     if (!match) {
-      html += `<div class="paste-row-warn">⚠️ ${qty} cr ${qProd} — no match</div>`;
+      html += `<div class="paste-row-warn">⚠️ ${qProd} (qty ${qty}) — no match</div>`;
       _parsedPasteItems.push(null);
       return;
     }
     const rate = productRateMap[match.product] || 0;
-    html += `<div class="paste-row-ok">✅ ${qty} cr → ${match.product}${rate ? ' @ ₹'+rate : ''}</div>`;
+    html += `<div class="paste-row-ok">✅ ${match.product} × ${qty}${rate ? ' @ ₹'+rate : ''}</div>`;
     _parsedPasteItems.push({ qty, match, rate });
   });
   html += '</div>';
