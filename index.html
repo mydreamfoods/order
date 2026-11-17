@@ -934,9 +934,9 @@ function onProductInput() {
   const size = getSizeForProduct(prod);
   document.getElementById('txtSize').value = size || '';
   // Auto-fill rate & discount — client-wise first (only if rate > 0), else product default
-  const cr   = clientRateMap[prod];
+  const cr   = findClientRate(prod);
   const rate = (cr && cr.rate > 0) ? cr.rate
-             : (productRateMap[prod] || defaultRateMap[prod] || 0);
+             : (productRateMap[prod] || findDefaultRate(prod) || 0);
 
   if (rate > 0) document.getElementById('txtRate').value = rate;
   if (cr && cr.disc > 0) {
@@ -1391,6 +1391,26 @@ function buildClientRateMap(party) {
   });
 }
 
+// Fuzzy-normalized rate lookup — tries exact, then normalized name match
+function findClientRate(prodName) {
+  if (!prodName) return null;
+  if (clientRateMap[prodName]) return clientRateMap[prodName];
+  const norm = normalizeProd(prodName);
+  for (const key of Object.keys(clientRateMap)) {
+    if (normalizeProd(key) === norm) return clientRateMap[key];
+  }
+  return null;
+}
+function findDefaultRate(prodName) {
+  if (!prodName) return 0;
+  if (defaultRateMap[prodName]) return defaultRateMap[prodName];
+  const norm = normalizeProd(prodName);
+  for (const key of Object.keys(defaultRateMap)) {
+    if (normalizeProd(key) === norm) return defaultRateMap[key];
+  }
+  return 0;
+}
+
 function buildDefaultRateMap() {
   defaultRateMap = {};
   allClientRates.forEach(r => {
@@ -1598,9 +1618,9 @@ document.addEventListener('input', function(e) {
       _parsedPasteItems.push(null);
       return;
     }
-    const cr   = clientRateMap[match.product];
+    const cr   = findClientRate(match.product);
     const rate = (cr && cr.rate > 0) ? cr.rate
-               : (productRateMap[match.product] || defaultRateMap[match.product] || 0);
+               : (productRateMap[match.product] || findDefaultRate(match.product) || 0);
     const disc = (cr && cr.disc > 0) ? cr.disc : 0;
     html += `<div class="paste-row-ok">✅ ${match.product} × ${qty}${rate ? ' @ ₹'+rate : ''}${disc ? ' disc '+disc+'%' : ''}</div>`;
     _parsedPasteItems.push({ qty, match, rate, disc });
